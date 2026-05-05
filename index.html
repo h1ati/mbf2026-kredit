@@ -606,6 +606,7 @@ service cloud.firestore {
           <div class="act-row">
             <div><div class="act-lbl">CSR tevékenység MBF nevében</div><div class="act-pts">2 kredit / esemény</div></div>
             <input type="number" class="num-in" id="at" min="0" max="20" value="0" onchange="liveCalc()">
+            <textarea id="at-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a CSR tevékenységeket..."></textarea>
           </div>
         </div>
 
@@ -1159,7 +1160,7 @@ function getForm() {
     h: num('ah'), i: chk('ai'), j: num('aj'),
     k: num('ak'), k_names: v('ak-names'), l: num('al'), l_names: v('al-names'), m: num('am'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: num('aq'), q_names: v('aq-names'), r: num('ar'), r_names: v('ar-names'),
-    s: num('as'), s_names: v('as-names'), t: num('at'),
+    s: num('as'), s_names: v('as-names'), t: num('at'), t_names: v('at-names'),
     notes: v('a-notes')
   };
 }
@@ -1199,7 +1200,7 @@ async function loadActForm() {
     setNum('aq',rec.q); document.getElementById('aq-names').value = rec.q_names || '';
     setNum('ar',rec.r); document.getElementById('ar-names').value = rec.r_names || '';
     setNum('as',rec.s); document.getElementById('as-names').value = rec.s_names || '';
-    setNum('at',rec.t);
+    setNum('at',rec.t); document.getElementById('at-names').value = rec.t_names || '';
     document.getElementById('a-notes').value = rec.notes || '';
   } else {
     resetForm();
@@ -1224,6 +1225,7 @@ function resetForm() {
   document.getElementById('aq-names').value = '';
   document.getElementById('ar-names').value = '';
   document.getElementById('as-names').value = '';
+  document.getElementById('at-names').value = '';
   document.getElementById('a-notes').value = '';
   updateGCount();
   liveCalc();
