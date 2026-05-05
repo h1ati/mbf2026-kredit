@@ -168,6 +168,20 @@ tr:hover td{background:#f8f9fa}
 .global-loader .spin{width:36px;height:36px;border:3px solid rgba(42,82,152,.2);border-top-color:var(--primary-l)}
 .global-loader p{color:var(--primary);font-weight:500}
 
+/* Publication cards */
+.pub-card{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:#fafbfc}
+.pub-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pub-card-title{font-size:.875rem;font-weight:600;color:var(--primary)}
+.file-area{display:block;border:2px dashed var(--border);border-radius:8px;padding:10px 14px;text-align:center;font-size:.8rem;color:var(--muted);cursor:pointer;transition:border-color .2s;margin-top:5px}
+.file-area:hover{border-color:var(--primary-l);color:var(--primary)}
+.file-area input[type=file]{display:none}
+.file-st{font-size:.78rem;margin-top:5px;padding:4px 8px;border-radius:6px}
+.file-st.ok{color:var(--ok);background:#d4edda}
+.file-st.err{color:#721c24;background:#f8d7da}
+.pub-link-disp{font-size:.8rem;color:var(--primary-l);text-decoration:none;margin-right:8px}
+.pub-link-disp:hover{text-decoration:underline}
+.g-counter{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.875rem}
+
 /* Responsive */
 @media(max-width:768px){
   .dgrid{grid-template-columns:1fr}
@@ -237,6 +251,25 @@ small{font-size:.8rem;color:var(--muted)}
     <div class="step">
       <div class="step-num">4</div>
       <div class="step-body">
+        <h4>Firebase Storage engedélyezése (fájlfeltöltéshez)</h4>
+        <p>Ha szeretnéd, hogy a tagok PDF-et vagy fotót töltsenek fel a publikációikhoz: <strong>Storage → Get started → Production mode → europe-west1 → Done</strong></p>
+        <p class="mt1">Ezután a Storage <strong>Rules</strong> fülén cseréld le a szabályokat:</p>
+        <div class="code-block mt1" id="storage-rules-block">rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /publications/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+<button class="copy-btn" onclick="copyCode('storage-rules-block',this)">Másolás</button></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
         <h4>Firestore biztonsági szabályok beállítása</h4>
         <p>Firestore Database → <strong>Rules</strong> fülre kattints, töröld a meglévő tartalmat, majd másold be az alábbit:</p>
         <div class="code-block" id="rules-block">rules_version = '2';
@@ -273,7 +306,7 @@ service cloud.firestore {
     </div>
 
     <div class="step">
-      <div class="step-num">5</div>
+      <div class="step-num">6</div>
       <div class="step-body">
         <h4>Webalkalmazás hozzáadása és konfiguráció másolása</h4>
         <p>Project Overview → <strong>„&lt;/&gt;"</strong> (Web app) gomb → adj nevet (pl. <em>MBF Web</em>) → <strong>Register app</strong>. Ezután megjelenik a <code>firebaseConfig</code> objektum — másold be az alábbi mezőbe:</p>
@@ -459,36 +492,58 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">Kötelező előfeltételek</div>
+          <!-- E: Kötelező adatszolgáltatás -->
           <div class="act-row">
-            <div><div class="act-lbl">E &nbsp;—&nbsp; Kötelező éves adatszolgáltatás</div><div class="act-pts">Kötelező előfeltétel (nem pontoz)</div></div>
+            <div><div class="act-lbl">Kötelező éves adatszolgáltatás</div><div class="act-pts">Kötelező előfeltétel (nem pontoz)</div></div>
             <input type="checkbox" class="chk" id="ae" onchange="liveCalc()">
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">F &nbsp;—&nbsp; Kötelező publikáció</div><div class="act-pts">Kötelező előfeltétel (nem pontoz)</div></div>
-            <input type="checkbox" class="chk" id="af" onchange="liveCalc()">
+          <!-- F: Kötelező publikáció + link + fájl -->
+          <div style="padding:10px 0;border-bottom:1px solid #f0f0f0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div><div class="act-lbl">Kötelező publikáció</div><div class="act-pts">Kötelező előfeltétel (nem pontoz)</div></div>
+              <input type="checkbox" class="chk" id="af" onchange="liveCalc()" style="margin-top:3px">
+            </div>
+            <div style="margin-top:10px;padding-left:2px">
+              <div class="fg" style="margin-bottom:10px">
+                <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
+                <input type="url" id="af-link" placeholder="https://...">
+              </div>
+              <div>
+                <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:4px">PDF vagy fotó (opcionális)</label>
+                <label class="file-area" for="af-file-input">
+                  <span id="af-file-lbl">📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)</span>
+                  <input type="file" id="af-file-input" accept=".pdf,image/*" onchange="onFileChosen(this,'af-file-lbl','af')">
+                </label>
+                <div class="file-st" id="af-file-st" style="display:none"></div>
+                <a href="#" id="af-file-link" target="_blank" class="pub-link-disp mt1" style="display:none"></a>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- G: További publikációk — dinamikus lista -->
         <div class="act-section">
           <div class="act-sec-title">Publikációk</div>
-          <div class="act-row">
-            <div><div class="act-lbl">G &nbsp;—&nbsp; További publikációk</div><div class="act-pts">2 kredit / publikáció</div></div>
-            <input type="number" class="num-in" id="ag" min="0" max="50" value="0" onchange="liveCalc()">
+          <div id="g-pubs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addPub()" style="margin-top:6px">+ Publikáció hozzáadása <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Publikációk száma → kredit:</span>
+            <span><span id="g-count">0</span> db × 2 = <strong id="g-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
         <div class="act-section">
           <div class="act-sec-title">Részvétel és tisztségek</div>
           <div class="act-row">
-            <div><div class="act-lbl">H &nbsp;—&nbsp; Közgyűlésen részvétel</div><div class="act-pts">1 kredit / közgyűlés</div></div>
+            <div><div class="act-lbl">Közgyűlésen részvétel</div><div class="act-pts">1 kredit / közgyűlés</div></div>
             <input type="number" class="num-in" id="ah" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">I &nbsp;—&nbsp; Tisztségviselői pozíció (elnök / titkár / szék vezető)</div><div class="act-pts">4 kredit (ha igen)</div></div>
+            <div><div class="act-lbl">Tisztségviselői pozíció (elnök / titkár / szék vezető)</div><div class="act-pts">4 kredit (ha igen)</div></div>
             <input type="checkbox" class="chk" id="ai" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">J &nbsp;—&nbsp; Bizottsági tagság</div><div class="act-pts">3 kredit / bizottság</div></div>
+            <div><div class="act-lbl">Bizottsági tagság</div><div class="act-pts">3 kredit / bizottság</div></div>
             <input type="number" class="num-in" id="aj" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
         </div>
@@ -496,11 +551,11 @@ service cloud.firestore {
         <div class="act-section">
           <div class="act-sec-title">Munkacsoportok</div>
           <div class="act-row">
-            <div><div class="act-lbl">K &nbsp;—&nbsp; Munkacsoport részvétel</div><div class="act-pts">2 kredit / munkacsoport</div></div>
+            <div><div class="act-lbl">Munkacsoport részvétel</div><div class="act-pts">2 kredit / munkacsoport</div></div>
             <input type="number" class="num-in" id="ak" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">L &nbsp;—&nbsp; Munkacsoport koordinálás</div><div class="act-pts">3 kredit / téma</div></div>
+            <div><div class="act-lbl">Munkacsoport koordinálás</div><div class="act-pts">3 kredit / téma</div></div>
             <input type="number" class="num-in" id="al" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
         </div>
@@ -508,11 +563,11 @@ service cloud.firestore {
         <div class="act-section">
           <div class="act-sec-title">SECUSzerda</div>
           <div class="act-row">
-            <div><div class="act-lbl">M &nbsp;—&nbsp; SECUSzerda téma vezető</div><div class="act-pts">2 kredit / téma</div></div>
+            <div><div class="act-lbl">SECUSzerda téma vezető</div><div class="act-pts">2 kredit / téma</div></div>
             <input type="number" class="num-in" id="am" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">N &nbsp;—&nbsp; SECUSzerda rendezvényen részvétel</div><div class="act-pts">1 kredit / alkalom (max. 2 kredit / év)</div></div>
+            <div><div class="act-lbl">SECUSzerda rendezvényen részvétel</div><div class="act-pts">1 kredit / alkalom (max. 2 kredit / év)</div></div>
             <input type="number" class="num-in" id="an" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
         </div>
@@ -520,19 +575,19 @@ service cloud.firestore {
         <div class="act-section">
           <div class="act-sec-title">Konferenciák</div>
           <div class="act-row">
-            <div><div class="act-lbl">O &nbsp;—&nbsp; MBF Konferencián részvétel</div><div class="act-pts">2 kredit (ha részt vett)</div></div>
+            <div><div class="act-lbl">MBF Konferencián részvétel</div><div class="act-pts">2 kredit (ha részt vett)</div></div>
             <input type="checkbox" class="chk" id="ao" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">P &nbsp;—&nbsp; MBF Konferencián előadás</div><div class="act-pts">4 kredit (ha előadott)</div></div>
+            <div><div class="act-lbl">MBF Konferencián előadás</div><div class="act-pts">4 kredit (ha előadott)</div></div>
             <input type="checkbox" class="chk" id="ap" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">Q &nbsp;—&nbsp; Más szakmai konferencián előadás</div><div class="act-pts">3 kredit / előadás</div></div>
+            <div><div class="act-lbl">Más szakmai konferencián előadás</div><div class="act-pts">3 kredit / előadás</div></div>
             <input type="number" class="num-in" id="aq" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">R &nbsp;—&nbsp; Más konferencián részvétel (jelentéssel)</div><div class="act-pts">2 kredit / alkalom</div></div>
+            <div><div class="act-lbl">Más konferencián részvétel (jelentéssel)</div><div class="act-pts">2 kredit / alkalom</div></div>
             <input type="number" class="num-in" id="ar" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
         </div>
@@ -540,11 +595,11 @@ service cloud.firestore {
         <div class="act-section">
           <div class="act-sec-title">Egyéb aktivitások</div>
           <div class="act-row">
-            <div><div class="act-lbl">S &nbsp;—&nbsp; Egyéni vállalások</div><div class="act-pts">1–2 kredit / vállalás — add meg a szerzett kreditpontok összegét</div></div>
+            <div><div class="act-lbl">Egyéni vállalások</div><div class="act-pts">1–2 kredit / vállalás — add meg a szerzett kreditpontok összegét</div></div>
             <input type="number" class="num-in" id="as" min="0" max="40" value="0" onchange="liveCalc()">
           </div>
           <div class="act-row">
-            <div><div class="act-lbl">T &nbsp;—&nbsp; CSR tevékenység MBF nevében</div><div class="act-pts">2 kredit / esemény</div></div>
+            <div><div class="act-lbl">CSR tevékenység MBF nevében</div><div class="act-pts">2 kredit / esemény</div></div>
             <input type="number" class="num-in" id="at" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
         </div>
@@ -667,6 +722,7 @@ service cloud.firestore {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
@@ -683,9 +739,11 @@ const EMBEDDED_ADMIN_EMAIL = '';
 // ═══════════════════════════════════════════════════════
 //  GLOBALS
 // ═══════════════════════════════════════════════════════
-let auth, db;
+let auth, db, storage;
 let currentUser = null;
 let _rejectedFlag = false;
+let pubCounter = 0;
+const pendingFiles = {}; // { key: File } — fájlok mentés előtt
 
 const LS = {
   get:    k     => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -811,6 +869,7 @@ function initFB(config) {
   }
   auth = firebase.auth();
   db   = firebase.firestore();
+  try { storage = firebase.storage(); } catch(e) { storage = null; }
 
   // Init EmailJS if configured
   const ejs = LS.get('mbf26_ejs');
@@ -985,16 +1044,114 @@ function aSection(s, el) {
 //  CREDIT CALC
 // ═══════════════════════════════════════════════════════
 function calcCredits(a) {
-  return (a.g * 2) + a.h + (a.i ? 4 : 0) + (a.j * 3) +
-         (a.k * 2) + (a.l * 3) + (a.m * 2) + Math.min(a.n, 2) +
-         (a.o ? 2 : 0) + (a.p ? 4 : 0) + (a.q * 3) + (a.r * 2) +
-         a.s + (a.t * 2);
+  return ((a.g||0) * 2) + (a.h||0) + (a.i ? 4 : 0) + ((a.j||0) * 3) +
+         ((a.k||0) * 2) + ((a.l||0) * 3) + ((a.m||0) * 2) + Math.min(a.n||0, 2) +
+         (a.o ? 2 : 0) + (a.p ? 4 : 0) + ((a.q||0) * 3) + ((a.r||0) * 2) +
+         (a.s||0) + ((a.t||0) * 2);
 }
 
+// ── Publication management ────────────────────────────
+function addPub(data = {}) {
+  pubCounter++;
+  const id  = 'gpub_' + pubCounter;
+  const n   = document.querySelectorAll('#g-pubs .pub-card').length + 1;
+  const hasFile = data.file_url && data.file_name;
+  document.getElementById('g-pubs').insertAdjacentHTML('beforeend', `
+    <div class="pub-card" id="${id}" data-file-url="${data.file_url||''}" data-file-name="${esc(data.file_name||'')}">
+      <div class="pub-card-head">
+        <span class="pub-card-title">Publikáció #${n}</span>
+        <button class="btn btn-err btn-sm" onclick="removePub('${id}')">× Törlés</button>
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <label style="font-size:.8rem;font-weight:600">Cím (opcionális)</label>
+        <input type="text" class="pub-title" placeholder="Publikáció címe..." value="${esc(data.title||'')}">
+      </div>
+      <div class="fg" style="margin-bottom:8px">
+        <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
+        <input type="url" class="pub-link" placeholder="https://..." value="${esc(data.link||'')}">
+      </div>
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:4px">PDF vagy fotó (opcionális)</label>
+        ${hasFile
+          ? `<a href="${esc(data.file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(data.file_name)}</a>
+             <label class="file-area" for="fi_${id}" style="margin-top:6px">
+               <span id="lbl_${id}">↺ Csere: Kattints új fájl kiválasztásához</span>
+               <input type="file" id="fi_${id}" accept=".pdf,image/*" onchange="onFileChosen(this,'lbl_${id}','${id}')">
+             </label>`
+          : `<label class="file-area" for="fi_${id}">
+               <span id="lbl_${id}">📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)</span>
+               <input type="file" id="fi_${id}" accept=".pdf,image/*" onchange="onFileChosen(this,'lbl_${id}','${id}')">
+             </label>`}
+        <div class="file-st" id="fst_${id}" style="display:none"></div>
+      </div>
+    </div>`);
+  updateGCount();
+  liveCalc();
+}
+
+function removePub(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  delete pendingFiles[id];
+  // renumber
+  document.querySelectorAll('#g-pubs .pub-card .pub-card-title').forEach((el,i) => {
+    el.textContent = `Publikáció #${i+1}`;
+  });
+  updateGCount();
+  liveCalc();
+}
+
+function onFileChosen(input, lblId, key) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  pendingFiles[key] = file;
+  document.getElementById(lblId).textContent = '✓ ' + file.name;
+}
+
+function updateGCount() {
+  const n = document.querySelectorAll('#g-pubs .pub-card').length;
+  document.getElementById('g-count').textContent = n;
+  document.getElementById('g-cred').textContent  = n * 2;
+}
+
+function getGPubs() {
+  const pubs = [];
+  document.querySelectorAll('#g-pubs .pub-card').forEach(card => {
+    pubs.push({
+      _id:      card.id,
+      title:    card.querySelector('.pub-title')?.value || '',
+      link:     card.querySelector('.pub-link')?.value  || '',
+      file_url:  card.dataset.fileUrl  || '',
+      file_name: card.dataset.fileName || '',
+    });
+  });
+  return pubs;
+}
+
+function getExt(name) { return (name.split('.').pop() || 'bin').toLowerCase(); }
+
+async function uploadFile(file, path) {
+  if (!storage) return null;
+  try {
+    const ref  = storage.ref(path);
+    await ref.put(file);
+    return await ref.getDownloadURL();
+  } catch(e) { console.warn('Storage upload failed:', e); return null; }
+}
+
+// ── Form helpers ──────────────────────────────────────
 function getForm() {
+  const gPubs = getGPubs();
   return {
-    e: chk('ae'), f: chk('af'),
-    g: num('ag'), h: num('ah'), i: chk('ai'), j: num('aj'),
+    e: chk('ae'),
+    f: chk('af'),
+    f_link: document.getElementById('af-link').value.trim(),
+    f_file_url:  document.getElementById('af-file-link').href !== '#' ? document.getElementById('af-file-link').href : '',
+    f_file_name: pendingFiles['af'] ? pendingFiles['af'].name
+               : (document.getElementById('af-file-link').textContent.replace('📎 ','') || ''),
+    g: gPubs.length,
+    g_pubs: gPubs,
+    h: num('ah'), i: chk('ai'), j: num('aj'),
     k: num('ak'), l: num('al'), m: num('am'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: num('aq'), r: num('ar'),
     s: num('as'), t: num('at'),
@@ -1003,14 +1160,33 @@ function getForm() {
 }
 
 function liveCalc() {
-  document.getElementById('prev-n').textContent = calcCredits(getForm());
+  const gCount = document.querySelectorAll('#g-pubs .pub-card').length;
+  const form   = getForm();
+  form.g       = gCount;
+  document.getElementById('prev-n').textContent = calcCredits(form);
 }
 
 async function loadActForm() {
   const rec = await getUserActivity(currentUser.id);
+  // Clear pub state
+  document.getElementById('g-pubs').innerHTML = '';
+  pubCounter = 0;
+  Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
+
   if (rec) {
     setChk('ae',rec.e); setChk('af',rec.f);
-    setNum('ag',rec.g); setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
+    document.getElementById('af-link').value = rec.f_link || '';
+    // F file
+    if (rec.f_file_url) {
+      const lnk = document.getElementById('af-file-link');
+      lnk.href        = rec.f_file_url;
+      lnk.textContent = '📎 ' + (rec.f_file_name || 'Megtekintés');
+      lnk.style.display = 'inline';
+      document.getElementById('af-file-lbl').textContent = '↺ Csere: Kattints új fájl kiválasztásához';
+    }
+    // G pubs
+    (rec.g_pubs || []).forEach(p => addPub(p));
+    setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
     setNum('ak',rec.k); setNum('al',rec.l); setNum('am',rec.m); setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p); setNum('aq',rec.q); setNum('ar',rec.r);
     setNum('as',rec.s); setNum('at',rec.t);
@@ -1018,21 +1194,70 @@ async function loadActForm() {
   } else {
     resetForm();
   }
+  updateGCount();
   liveCalc();
 }
 
 function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
-  ['ag','ah','aj','ak','al','am','an','aq','ar','as','at'].forEach(id => setNum(id, 0));
+  ['ah','aj','ak','al','am','an','aq','ar','as','at'].forEach(id => setNum(id, 0));
+  document.getElementById('af-link').value = '';
+  const lnk = document.getElementById('af-file-link');
+  lnk.style.display = 'none'; lnk.href = '#';
+  document.getElementById('af-file-lbl').textContent = '📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)';
+  document.getElementById('af-file-st').style.display = 'none';
+  document.getElementById('g-pubs').innerHTML = '';
+  pubCounter = 0;
+  Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
   document.getElementById('a-notes').value = '';
+  updateGCount();
   liveCalc();
 }
 
 async function saveActs() {
-  const form = getForm();
-  const tot  = calcCredits(form);
   setBtn('save-btn', true, 'Mentés...');
   try {
+    const form = getForm();
+
+    // Upload F file if pending
+    if (pendingFiles['af']) {
+      showFileSt('af-file-st', 'uploading', 'Feltöltés...');
+      const url = await uploadFile(pendingFiles['af'],
+        `publications/${currentUser.id}/f_${Date.now()}.${getExt(pendingFiles['af'].name)}`);
+      if (url) {
+        form.f_file_url  = url;
+        form.f_file_name = pendingFiles['af'].name;
+        const lnk = document.getElementById('af-file-link');
+        lnk.href = url; lnk.textContent = '📎 ' + pendingFiles['af'].name; lnk.style.display = 'inline';
+        delete pendingFiles['af'];
+        showFileSt('af-file-st', 'ok', '✓ Feltöltve');
+      } else {
+        showFileSt('af-file-st', 'err', 'Fájl feltöltés sikertelen (Storage nem elérhető). Link mentve.');
+      }
+    }
+
+    // Upload G pub files if pending
+    for (const pub of form.g_pubs) {
+      const key = pub._id;
+      if (pendingFiles[key]) {
+        showFileSt('fst_' + key, 'uploading', 'Feltöltés...');
+        const url = await uploadFile(pendingFiles[key],
+          `publications/${currentUser.id}/${key}_${Date.now()}.${getExt(pendingFiles[key].name)}`);
+        if (url) {
+          pub.file_url  = url;
+          pub.file_name = pendingFiles[key].name;
+          const card = document.getElementById(key);
+          if (card) { card.dataset.fileUrl = url; card.dataset.fileName = pub.file_name; }
+          delete pendingFiles[key];
+          showFileSt('fst_' + key, 'ok', '✓ Feltöltve');
+        } else {
+          showFileSt('fst_' + key, 'err', 'Feltöltés sikertelen. Csak link mentve.');
+        }
+      }
+      delete pub._id; // ne mentse a Firestoreba
+    }
+
+    const tot   = calcCredits(form);
     const docId = `${currentUser.id}_2026`;
     const now   = firebase.firestore.FieldValue.serverTimestamp();
     const snap  = await db.collection('activities').doc(docId).get();
@@ -1048,6 +1273,14 @@ async function saveActs() {
   } finally {
     setBtn('save-btn', false, '💾 Mentés');
   }
+}
+
+function showFileSt(elId, type, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.className = 'file-st ' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1377,22 +1610,43 @@ function saveCfg() {
 // ═══════════════════════════════════════════════════════
 function actTable(r) {
   const rows = [
-    { lbl:'E — Kötelező adatszolgáltatás',         disp:r.e?'Teljesítve':'Nem', credits:0,              val:r.e },
-    { lbl:'F — Kötelező publikáció',               disp:r.f?'Teljesítve':'Nem', credits:0,              val:r.f },
-    { lbl:'G — További publikációk',               disp:r.g+' db',             credits:r.g*2,           val:r.g>0 },
-    { lbl:'H — Közgyűlésen részvétel',             disp:r.h+' alkalom',        credits:r.h,             val:r.h>0 },
-    { lbl:'I — Tisztségviselői pozíció',           disp:r.i?'Igen':'Nem',      credits:r.i?4:0,         val:r.i },
-    { lbl:'J — Bizottsági tagság',                 disp:r.j+' db',             credits:r.j*3,           val:r.j>0 },
-    { lbl:'K — Munkacsoport részvétel',            disp:r.k+' db',             credits:r.k*2,           val:r.k>0 },
-    { lbl:'L — Munkacsoport koordinálás',          disp:r.l+' téma',           credits:r.l*3,           val:r.l>0 },
-    { lbl:'M — SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*2,           val:r.m>0 },
-    { lbl:'N — SECUSzerda részvétel',              disp:r.n+' alkalom',        credits:Math.min(r.n,2), val:r.n>0 },
-    { lbl:'O — MBF Konferencia részvétel',         disp:r.o?'Igen':'Nem',      credits:r.o?2:0,         val:r.o },
-    { lbl:'P — MBF Konferencián előadás',          disp:r.p?'Igen':'Nem',      credits:r.p?4:0,         val:r.p },
-    { lbl:'Q — Más szakmai konf. előadás',         disp:r.q+' alkalom',        credits:r.q*3,           val:r.q>0 },
-    { lbl:'R — Más konf. részvétel (jelentéssel)', disp:r.r+' alkalom',        credits:r.r*2,           val:r.r>0 },
-    { lbl:'S — Egyéni vállalások',                 disp:r.s+' kredit',         credits:r.s,             val:r.s>0 },
-    { lbl:'T — CSR tevékenység MBF nevében',       disp:r.t+' esemény',        credits:r.t*2,           val:r.t>0 },
+    { lbl:'Kötelező adatszolgáltatás',         disp:r.e?'Teljesítve':'Nem', credits:0,              val:r.e },
+    { lbl:'Kötelező publikáció', credits:0, val:r.f,
+      disp: (()=>{
+        let d = r.f ? 'Teljesítve' : 'Nem';
+        if (r.f_link) d += ` <a href="${esc(r.f_link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
+        if (r.f_file_url) d += ` <a href="${esc(r.f_file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(r.f_file_name||'Fájl')}</a>`;
+        return d;
+      })()
+    },
+    { lbl:'További publikációk', credits:(r.g||0)*2, val:(r.g||0)>0,
+      disp: (()=>{
+        let d = (r.g||0) + ' db';
+        if (r.g_pubs && r.g_pubs.length) {
+          r.g_pubs.forEach(p => {
+            d += `<div style="font-size:.78rem;margin-top:4px;padding:3px 8px;background:#f0f4f8;border-radius:5px">`;
+            if (p.title) d += `<strong>${esc(p.title)}</strong> `;
+            if (p.link)     d += `<a href="${esc(p.link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
+            if (p.file_url) d += `<a href="${esc(p.file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(p.file_name||'Fájl')}</a>`;
+            d += '</div>';
+          });
+        }
+        return d;
+      })()
+    },
+    { lbl:'Közgyűlésen részvétel',             disp:r.h+' alkalom',        credits:r.h,             val:r.h>0 },
+    { lbl:'Tisztségviselői pozíció',           disp:r.i?'Igen':'Nem',      credits:r.i?4:0,         val:r.i },
+    { lbl:'Bizottsági tagság',                 disp:r.j+' db',             credits:r.j*3,           val:r.j>0 },
+    { lbl:'Munkacsoport részvétel',            disp:r.k+' db',             credits:r.k*2,           val:r.k>0 },
+    { lbl:'Munkacsoport koordinálás',          disp:r.l+' téma',           credits:r.l*3,           val:r.l>0 },
+    { lbl:'SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*2,           val:r.m>0 },
+    { lbl:'SECUSzerda részvétel',              disp:r.n+' alkalom',        credits:Math.min(r.n,2), val:r.n>0 },
+    { lbl:'MBF Konferencia részvétel',         disp:r.o?'Igen':'Nem',      credits:r.o?2:0,         val:r.o },
+    { lbl:'MBF Konferencián előadás',          disp:r.p?'Igen':'Nem',      credits:r.p?4:0,         val:r.p },
+    { lbl:'Más szakmai konf. előadás',         disp:r.q+' alkalom',        credits:r.q*3,           val:r.q>0 },
+    { lbl:'Más konf. részvétel (jelentéssel)', disp:r.r+' alkalom',        credits:r.r*2,           val:r.r>0 },
+    { lbl:'Egyéni vállalások',                 disp:r.s+' kredit',         credits:r.s,             val:r.s>0 },
+    { lbl:'CSR tevékenység MBF nevében',       disp:r.t+' esemény',        credits:r.t*2,           val:r.t>0 },
   ];
   const vis = rows.filter(x => x.credits > 0 || x.val);
   if (!vis.length) return '<p style="color:var(--muted);font-size:.875rem">Nincs rögzített aktivitás.</p>';
