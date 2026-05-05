@@ -460,7 +460,7 @@ service cloud.firestore {
       <div class="cred-big">
         <div class="cred-num" id="u-big-num">0</div>
         <div class="cred-sub">kredit pont — 2026-os év</div>
-        <div class="cred-badge cb-pend" id="u-big-badge">Adatok rögzítése szükséges</div>
+        <div class="cred-badge" id="u-big-badge" style="display:none"></div>
         <button class="btn btn-p mt2" onclick="uSection('act',document.getElementById('unl-act'))">✏️ Adatok rögzítése</button>
       </div>
       <div class="card">
@@ -1313,15 +1313,14 @@ async function renderUserDash() {
   updateSideBar(tot);
   const b = document.getElementById('u-big-badge');
   if (!rec) {
-    b.textContent = 'Adatok rögzítése szükséges'; b.className = 'cred-badge cb-pend';
+    b.style.display = 'none';
     document.getElementById('u-summ').innerHTML =
-      `<div class="empty"><div class="empty-ico">📝</div><p>Még nem rögzítettél aktivitásokat.</p>
-       <button class="btn btn-p mt2" onclick="uSection('act',document.getElementById('unl-act'))">Aktivitások rögzítése →</button></div>`;
+      `<div class="empty"><div class="empty-ico">📝</div><p>Még nem rögzítettél aktivitásokat.</p></div>`;
   } else if (tot >= 10) {
-    b.textContent = '✓ Megfelelő — Teljesítette a minimumkövetelményt'; b.className = 'cred-badge cb-ok';
+    b.textContent = '✓ Megfelelő — Teljesítette a minimumkövetelményt'; b.className = 'cred-badge cb-ok'; b.style.display = '';
     document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
   } else {
-    b.textContent = `✗ Nem megfelelő — még ${10 - tot} kredit hiányzik`; b.className = 'cred-badge cb-fail';
+    b.textContent = `✗ Nem megfelelő — még ${10 - tot} kredit hiányzik`; b.className = 'cred-badge cb-fail'; b.style.display = '';
     document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
   }
 }
