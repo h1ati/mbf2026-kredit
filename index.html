@@ -553,10 +553,12 @@ service cloud.firestore {
           <div class="act-row">
             <div><div class="act-lbl">Munkacsoport részvétel</div><div class="act-pts">2 kredit / munkacsoport</div></div>
             <input type="number" class="num-in" id="ak" min="0" max="20" value="0" onchange="liveCalc()">
+            <textarea id="ak-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a munkacsoportokat..."></textarea>
           </div>
           <div class="act-row">
             <div><div class="act-lbl">Munkacsoport koordinálás</div><div class="act-pts">3 kredit / téma</div></div>
             <input type="number" class="num-in" id="al" min="0" max="20" value="0" onchange="liveCalc()">
+            <textarea id="al-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a munkacsoportokat..."></textarea>
           </div>
         </div>
 
@@ -1152,7 +1154,7 @@ function getForm() {
     g: gPubs.length,
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
-    k: num('ak'), l: num('al'), m: num('am'), n: num('an'),
+    k: num('ak'), k_names: v('ak-names'), l: num('al'), l_names: v('al-names'), m: num('am'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: num('aq'), r: num('ar'),
     s: num('as'), t: num('at'),
     notes: v('a-notes')
@@ -1187,7 +1189,9 @@ async function loadActForm() {
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
     setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
-    setNum('ak',rec.k); setNum('al',rec.l); setNum('am',rec.m); setNum('an',rec.n);
+    setNum('ak',rec.k); document.getElementById('ak-names').value = rec.k_names || '';
+    setNum('al',rec.l); document.getElementById('al-names').value = rec.l_names || '';
+    setNum('am',rec.m); setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p); setNum('aq',rec.q); setNum('ar',rec.r);
     setNum('as',rec.s); setNum('at',rec.t);
     document.getElementById('a-notes').value = rec.notes || '';
@@ -1209,6 +1213,8 @@ function resetForm() {
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
+  document.getElementById('ak-names').value = '';
+  document.getElementById('al-names').value = '';
   document.getElementById('a-notes').value = '';
   updateGCount();
   liveCalc();
