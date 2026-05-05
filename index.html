@@ -1275,9 +1275,7 @@ async function saveActs() {
     const tot   = calcCredits(form);
     const docId = `${currentUser.id}_2026`;
     const now   = firebase.firestore.FieldValue.serverTimestamp();
-    const snap  = await db.collection('activities').doc(docId).get();
     const data  = { uid: currentUser.id, year: 2026, ...form, total: tot, updated: now };
-    if (!snap.exists) data.saved = now;
     await db.collection('activities').doc(docId).set(data, { merge: true });
     updateSideBar(tot);
     document.getElementById('act-alert').innerHTML =
