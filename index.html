@@ -533,15 +533,19 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">Munkacsoportok</div>
-          <div class="act-row">
-            <div><div class="act-lbl">Munkacsoport részvétel</div><div class="act-pts">2 kredit / munkacsoport</div></div>
-            <input type="number" class="num-in" id="ak" min="0" max="20" value="0" onchange="liveCalc()">
-            <textarea id="ak-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a munkacsoportokat..."></textarea>
+          <div class="act-lbl" style="margin-bottom:6px">Munkacsoport részvétel <span class="act-pts">2 kredit / munkacsoport</span></div>
+          <div id="k-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('k')" style="margin-top:6px">+ Munkacsoport megnevezése <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Munkacsoportok száma → kredit:</span>
+            <span><span id="k-count">0</span> db × 2 = <strong id="k-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">Munkacsoport koordinálás</div><div class="act-pts">3 kredit / téma</div></div>
-            <input type="number" class="num-in" id="al" min="0" max="20" value="0" onchange="liveCalc()">
-            <textarea id="al-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a munkacsoportokat..."></textarea>
+          <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">Munkacsoport koordinálás <span class="act-pts">3 kredit / munkacsoport</span></div>
+          <div id="l-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('l')" style="margin-top:6px">+ Munkacsoport megnevezése <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Koordinált munkacsoportok száma → kredit:</span>
+            <span><span id="l-count">0</span> db × 3 = <strong id="l-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
@@ -1115,6 +1119,52 @@ function updateGCount() {
   document.getElementById('g-cred').textContent  = n * 2;
 }
 
+let wgCounter = 0;
+
+function addWg(type, data = {}) {
+  wgCounter++;
+  const id      = 'wg_' + type + '_' + wgCounter;
+  const credits = type === 'k' ? 2 : 3;
+  const n       = document.querySelectorAll('#' + type + '-wgs .pub-card').length + 1;
+  const label   = type === 'k' ? 'Részvétel' : 'Koordinálás';
+  document.getElementById(type + '-wgs').insertAdjacentHTML('beforeend', `
+    <div class="pub-card" id="${id}">
+      <div class="pub-card-head">
+        <span class="pub-card-title">${label} #${n}</span>
+        <button class="btn btn-err btn-sm" onclick="removeWg('${id}','${type}')">× Törlés</button>
+      </div>
+      <input type="text" class="wg-name" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em"
+             placeholder="Munkacsoport megnevezése" value="${esc(data.name||'')}">
+    </div>
+  `);
+  updateWgCount(type);
+}
+
+function removeWg(id, type) {
+  document.getElementById(id).remove();
+  const label = type === 'k' ? 'Részvétel' : 'Koordinálás';
+  document.querySelectorAll('#' + type + '-wgs .pub-card .pub-card-title').forEach((el,i) => {
+    el.textContent = label + ' #' + (i + 1);
+  });
+  updateWgCount(type);
+}
+
+function updateWgCount(type) {
+  const credits = type === 'k' ? 2 : 3;
+  const n = document.querySelectorAll('#' + type + '-wgs .pub-card').length;
+  document.getElementById(type + '-count').textContent = n;
+  document.getElementById(type + '-cred').textContent  = n * credits;
+  liveCalc();
+}
+
+function getWgs(type) {
+  const result = [];
+  document.querySelectorAll('#' + type + '-wgs .pub-card').forEach(card => {
+    result.push({ name: card.querySelector('.wg-name')?.value.trim() || '' });
+  });
+  return result;
+}
+
 function getGPubs() {
   const pubs = [];
   document.querySelectorAll('#g-pubs .pub-card').forEach(card => {
@@ -1153,7 +1203,7 @@ function getForm() {
     g: gPubs.length,
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
-    k: num('ak'), k_names: v('ak-names'), l: num('al'), l_names: v('al-names'), m: num('am'), n: num('an'),
+    k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: num('am'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: num('aq'), q_names: v('aq-names'), r: num('ar'), r_names: v('ar-names'),
     s: num('as'), s_names: v('as-names'), t: num('at'), t_names: v('at-names'),
     notes: v('a-notes')
@@ -1161,9 +1211,10 @@ function getForm() {
 }
 
 function liveCalc() {
-  const gCount = document.querySelectorAll('#g-pubs .pub-card').length;
-  const form   = getForm();
-  form.g       = gCount;
+  const form = getForm();
+  form.g = document.querySelectorAll('#g-pubs .pub-card').length;
+  form.k = document.querySelectorAll('#k-wgs .pub-card').length;
+  form.l = document.querySelectorAll('#l-wgs .pub-card').length;
   document.getElementById('prev-n').textContent = calcCredits(form);
 }
 
@@ -1188,8 +1239,8 @@ async function loadActForm() {
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
     setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
-    setNum('ak',rec.k); document.getElementById('ak-names').value = rec.k_names || '';
-    setNum('al',rec.l); document.getElementById('al-names').value = rec.l_names || '';
+    (rec.k_wgs || Array(rec.k||0).fill({})).forEach(w => addWg('k', w));
+    (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
     setNum('am',rec.m); setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p);
     setNum('aq',rec.q); document.getElementById('aq-names').value = rec.q_names || '';
@@ -1206,7 +1257,7 @@ async function loadActForm() {
 
 function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
-  ['ah','aj','ak','al','am','an','aq','ar','as','at'].forEach(id => setNum(id, 0));
+  ['ah','aj','am','an','aq','ar','as','at'].forEach(id => setNum(id, 0));
   document.getElementById('af-link').value = '';
   const lnk = document.getElementById('af-file-link');
   lnk.style.display = 'none'; lnk.href = '#';
@@ -1215,8 +1266,8 @@ function resetForm() {
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
-  document.getElementById('ak-names').value = '';
-  document.getElementById('al-names').value = '';
+  document.getElementById('k-wgs').innerHTML = '';
+  document.getElementById('l-wgs').innerHTML = '';
   document.getElementById('aq-names').value = '';
   document.getElementById('ar-names').value = '';
   document.getElementById('as-names').value = '';
