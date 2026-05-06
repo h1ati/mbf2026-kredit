@@ -487,18 +487,9 @@ service cloud.firestore {
               <input type="checkbox" class="chk" id="af" onchange="liveCalc()" style="margin-top:3px">
             </div>
             <div style="margin-top:10px;padding-left:2px">
-              <div class="fg" style="margin-bottom:10px">
+              <div class="fg">
                 <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
                 <input type="url" id="af-link" placeholder="https://...">
-              </div>
-              <div>
-                <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:4px">PDF vagy fotó (opcionális)</label>
-                <label class="file-area" for="af-file-input">
-                  <span id="af-file-lbl">📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)</span>
-                  <input type="file" id="af-file-input" accept=".pdf,image/*" onchange="onFileChosen(this,'af-file-lbl','af')">
-                </label>
-                <div class="file-st" id="af-file-st" style="display:none"></div>
-                <a href="#" id="af-file-link" target="_blank" class="pub-link-disp mt1" style="display:none"></a>
               </div>
             </div>
           </div>
@@ -721,7 +712,6 @@ service cloud.firestore {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
@@ -745,11 +735,10 @@ const EMBEDDED_ADMIN_EMAIL = 'attila.kalcso@mbf.hu';
 // ═══════════════════════════════════════════════════════
 //  GLOBALS
 // ═══════════════════════════════════════════════════════
-let auth, db, storage;
+let auth, db;
 let currentUser = null;
 let _rejectedFlag = false;
 let pubCounter = 0;
-const pendingFiles = {}; // { key: File } — fájlok mentés előtt
 
 const LS = {
   get:    k     => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -875,8 +864,6 @@ function initFB(config) {
   }
   auth = firebase.auth();
   db   = firebase.firestore();
-  try { storage = firebase.storage(); } catch(e) { storage = null; }
-
   // Init EmailJS if configured
   const ejs = LS.get('mbf26_ejs');
   if (ejs && ejs.pubkey) emailjs.init(ejs.pubkey);
@@ -1064,11 +1051,10 @@ function isPass(a) {
 // ── Publication management ────────────────────────────
 function addPub(data = {}) {
   pubCounter++;
-  const id  = 'gpub_' + pubCounter;
-  const n   = document.querySelectorAll('#g-pubs .pub-card').length + 1;
-  const hasFile = data.file_url && data.file_name;
+  const id = 'gpub_' + pubCounter;
+  const n  = document.querySelectorAll('#g-pubs .pub-card').length + 1;
   document.getElementById('g-pubs').insertAdjacentHTML('beforeend', `
-    <div class="pub-card" id="${id}" data-file-url="${data.file_url||''}" data-file-name="${esc(data.file_name||'')}">
+    <div class="pub-card" id="${id}">
       <div class="pub-card-head">
         <span class="pub-card-title">Publikáció #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removePub('${id}')">× Törlés</button>
@@ -1077,23 +1063,9 @@ function addPub(data = {}) {
         <label style="font-size:.8rem;font-weight:600">Cím (opcionális)</label>
         <input type="text" class="pub-title" placeholder="Publikáció címe..." value="${esc(data.title||'')}">
       </div>
-      <div class="fg" style="margin-bottom:8px">
+      <div class="fg">
         <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
         <input type="url" class="pub-link" placeholder="https://..." value="${esc(data.link||'')}">
-      </div>
-      <div>
-        <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:4px">PDF vagy fotó (opcionális)</label>
-        ${hasFile
-          ? `<a href="${esc(data.file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(data.file_name)}</a>
-             <label class="file-area" for="fi_${id}" style="margin-top:6px">
-               <span id="lbl_${id}">↺ Csere: Kattints új fájl kiválasztásához</span>
-               <input type="file" id="fi_${id}" accept=".pdf,image/*" onchange="onFileChosen(this,'lbl_${id}','${id}')">
-             </label>`
-          : `<label class="file-area" for="fi_${id}">
-               <span id="lbl_${id}">📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)</span>
-               <input type="file" id="fi_${id}" accept=".pdf,image/*" onchange="onFileChosen(this,'lbl_${id}','${id}')">
-             </label>`}
-        <div class="file-st" id="fst_${id}" style="display:none"></div>
       </div>
     </div>`);
   updateGCount();
@@ -1103,20 +1075,12 @@ function addPub(data = {}) {
 function removePub(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
-  delete pendingFiles[id];
   // renumber
   document.querySelectorAll('#g-pubs .pub-card .pub-card-title').forEach((el,i) => {
     el.textContent = `Publikáció #${i+1}`;
   });
   updateGCount();
   liveCalc();
-}
-
-function onFileChosen(input, lblId, key) {
-  if (!input.files || !input.files[0]) return;
-  const file = input.files[0];
-  pendingFiles[key] = file;
-  document.getElementById(lblId).textContent = '✓ ' + file.name;
 }
 
 function updateGCount() {
@@ -1184,27 +1148,11 @@ function getGPubs() {
       _id:      card.id,
       title:    card.querySelector('.pub-title')?.value || '',
       link:     card.querySelector('.pub-link')?.value  || '',
-      file_url:  card.dataset.fileUrl  || '',
-      file_name: card.dataset.fileName || '',
     });
   });
   return pubs;
 }
 
-function getExt(name) { return (name.split('.').pop() || 'bin').toLowerCase(); }
-
-async function uploadFile(file, path) {
-  if (!storage) return { url: null, err: 'Firebase Storage nincs konfigurálva.' };
-  try {
-    const ref = storage.ref(path);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    return { url, err: null };
-  } catch(e) {
-    console.warn('Storage upload failed:', e);
-    return { url: null, err: e.message || 'Ismeretlen hiba' };
-  }
-}
 
 // ── Form helpers ──────────────────────────────────────
 function getForm() {
@@ -1213,9 +1161,6 @@ function getForm() {
     e: chk('ae'),
     f: chk('af'),
     f_link: document.getElementById('af-link').value.trim(),
-    f_file_url:  (function(){ const h = document.getElementById('af-file-link').getAttribute('href'); return (h && h !== '#') ? h : ''; })(),
-    f_file_name: pendingFiles['af'] ? pendingFiles['af'].name
-               : (document.getElementById('af-file-link').textContent.replace('📎 ','').trim() || ''),
     g: gPubs.length,
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
@@ -1242,19 +1187,10 @@ async function loadActForm() {
   // Clear pub state
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
-  Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
 
   if (rec) {
     setChk('ae',rec.e); setChk('af',rec.f);
     document.getElementById('af-link').value = rec.f_link || '';
-    // F file
-    if (rec.f_file_url) {
-      const lnk = document.getElementById('af-file-link');
-      lnk.href        = rec.f_file_url;
-      lnk.textContent = '📎 ' + (rec.f_file_name || 'Megtekintés');
-      lnk.style.display = 'inline';
-      document.getElementById('af-file-lbl').textContent = '↺ Csere: Kattints új fájl kiválasztásához';
-    }
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
     setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
@@ -1278,13 +1214,8 @@ function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
   ['ah','aj','am','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-link').value = '';
-  const lnk = document.getElementById('af-file-link');
-  lnk.style.display = 'none'; lnk.href = '#';
-  document.getElementById('af-file-lbl').textContent = '📎 Kattints a fájl kiválasztásához (PDF, JPG, PNG)';
-  document.getElementById('af-file-st').style.display = 'none';
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
-  Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
   ['k','l','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
   document.getElementById('as-names').value = '';
   document.getElementById('a-notes').value = '';
@@ -1297,45 +1228,7 @@ async function saveActs() {
   try {
     const form = getForm();
 
-    // Upload F file if pending
-    if (pendingFiles['af']) {
-      showFileSt('af-file-st', 'uploading', 'Feltöltés...');
-      const res = await uploadFile(pendingFiles['af'],
-        `publications/${currentUser.id}/f_${Date.now()}.${getExt(pendingFiles['af'].name)}`);
-      if (res.url) {
-        form.f_file_url  = res.url;
-        form.f_file_name = pendingFiles['af'].name;
-        const lnk = document.getElementById('af-file-link');
-        lnk.setAttribute('href', res.url);
-        lnk.textContent = '📎 ' + pendingFiles['af'].name;
-        lnk.style.display = 'inline';
-        delete pendingFiles['af'];
-        showFileSt('af-file-st', 'ok', '✓ Feltöltve');
-      } else {
-        showFileSt('af-file-st', 'err', 'Fájl feltöltés sikertelen: ' + res.err);
-      }
-    }
-
-    // Upload G pub files if pending
-    for (const pub of form.g_pubs) {
-      const key = pub._id;
-      if (pendingFiles[key]) {
-        showFileSt('fst_' + key, 'uploading', 'Feltöltés...');
-        const res = await uploadFile(pendingFiles[key],
-          `publications/${currentUser.id}/${key}_${Date.now()}.${getExt(pendingFiles[key].name)}`);
-        if (res.url) {
-          pub.file_url  = res.url;
-          pub.file_name = pendingFiles[key].name;
-          const card = document.getElementById(key);
-          if (card) { card.dataset.fileUrl = res.url; card.dataset.fileName = pub.file_name; }
-          delete pendingFiles[key];
-          showFileSt('fst_' + key, 'ok', '✓ Feltöltve');
-        } else {
-          showFileSt('fst_' + key, 'err', 'Feltöltés sikertelen: ' + res.err);
-        }
-      }
-      delete pub._id;
-    }
+    form.g_pubs.forEach(pub => delete pub._id);
 
     const tot   = calcCredits(form);
     const docId = `${currentUser.id}_2026`;
@@ -1351,14 +1244,6 @@ async function saveActs() {
   } finally {
     setBtn('save-btn', false, '💾 Mentés');
   }
-}
-
-function showFileSt(elId, type, msg) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.className = 'file-st ' + type;
-  el.textContent = msg;
-  el.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1698,7 +1583,6 @@ function actTable(r) {
       disp: (()=>{
         let d = r.f ? 'Teljesítve' : 'Nem';
         if (r.f_link) d += ` <a href="${esc(r.f_link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
-        if (r.f_file_url) d += ` <a href="${esc(r.f_file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(r.f_file_name||'Fájl')}</a>`;
         return d;
       })()
     },
