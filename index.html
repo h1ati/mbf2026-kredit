@@ -1229,9 +1229,36 @@ function resetForm() {
   liveCalc();
 }
 
+function pruneEmpty() {
+  ['k','l','m','q','r','t'].forEach(type => {
+    document.querySelectorAll('#' + type + '-wgs .pub-card').forEach(card => {
+      if (!card.querySelector('.wg-name')?.value.trim()) card.remove();
+    });
+    const label = WG_CFG[type].label;
+    document.querySelectorAll('#' + type + '-wgs .pub-card .pub-card-title').forEach((el,i) => {
+      el.textContent = label + ' #' + (i + 1);
+    });
+    const cfg = WG_CFG[type];
+    const n = document.querySelectorAll('#' + type + '-wgs .pub-card').length;
+    document.getElementById(type + '-count').textContent = n;
+    document.getElementById(type + '-cred').textContent  = n * cfg.credits;
+  });
+  document.querySelectorAll('#g-pubs .pub-card').forEach(card => {
+    const title = card.querySelector('.pub-title')?.value.trim();
+    const link  = card.querySelector('.pub-link')?.value.trim();
+    if (!title && !link) card.remove();
+  });
+  document.querySelectorAll('#g-pubs .pub-card .pub-card-title').forEach((el,i) => {
+    el.textContent = 'Publikáció #' + (i + 1);
+  });
+  updateGCount();
+  liveCalc();
+}
+
 async function saveActs() {
   setBtn('save-btn', true, 'Mentés...');
   try {
+    pruneEmpty();
     const form = getForm();
 
     form.g_pubs.forEach(pub => delete pub._id);
