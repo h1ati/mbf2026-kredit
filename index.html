@@ -689,10 +689,13 @@ service cloud.firestore {
         <p style="font-size:.875rem;color:var(--muted);margin-bottom:16px">Ha módosítani szeretnéd az EmailJS beállításokat, add meg az adatokat újra. Ha üresen hagyod, a jelenlegi beállítás marad.</p>
         <div class="frow">
           <div class="fg"><label>EmailJS Service ID</label><input type="text" id="cfg-ejs-service" placeholder="service_xxxxxxx"></div>
-          <div class="fg"><label>EmailJS Template ID</label><input type="text" id="cfg-ejs-template" placeholder="template_xxxxxxx"></div>
+          <div class="fg"><label>EmailJS Public Key</label><input type="text" id="cfg-ejs-pubkey" placeholder="xxxxxxxxxxxxxxxxxxx"></div>
         </div>
-        <div class="fg"><label>EmailJS Public Key</label><input type="text" id="cfg-ejs-pubkey" placeholder="xxxxxxxxxxxxxxxxxxx"></div>
-        <div class="fg"><label>Értesítő email cím</label><input type="email" id="cfg-ejs-to" placeholder="admin@email.hu"></div>
+        <div class="frow">
+          <div class="fg"><label>Admin értesítő sablon ID <span style="font-weight:400;color:var(--muted)">(új regisztráció → adminnak)</span></label><input type="text" id="cfg-ejs-template" placeholder="template_xxxxxxx"></div>
+          <div class="fg"><label>Tag értesítő sablon ID <span style="font-weight:400;color:var(--muted)">(jóváhagyás/elutasítás → tagnak)</span></label><input type="text" id="cfg-ejs-user-template" placeholder="template_xxxxxxx"></div>
+        </div>
+        <div class="fg"><label>Admin értesítő email cím</label><input type="email" id="cfg-ejs-to" placeholder="admin@email.hu"></div>
         <button class="btn btn-p" onclick="saveCfg()">Mentés</button>
         <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
         <div class="card-title" style="margin-top:0">Firebase konfiguráció visszaállítása</div>
@@ -1534,14 +1537,36 @@ async function renderAResults() {
 //  ADMIN ACTIONS
 // ═══════════════════════════════════════════════════════
 async function approveUser(uid) {
+  const snap = await db.collection('users').doc(uid).get();
   await db.collection('users').doc(uid).update({ status: 'approved' });
+  if (snap.exists) sendStatusNotification(snap.data(), 'approved');
   refreshAdmin();
 }
 
 async function rejectUser(uid) {
   if (!confirm('Biztosan el szeretnéd utasítani / letiltani ezt a felhasználót?')) return;
+  const snap = await db.collection('users').doc(uid).get();
   await db.collection('users').doc(uid).update({ status: 'rejected' });
+  if (snap.exists) sendStatusNotification(snap.data(), 'rejected');
   refreshAdmin();
+}
+
+async function sendStatusNotification(user, status) {
+  const ejs = LS.get('mbf26_ejs');
+  if (!ejs || !ejs.service || !ejs.userTemplate) return;
+  try {
+    await emailjs.send(ejs.service, ejs.userTemplate, {
+      to_email:  user.email,
+      nev:       `${user.last} ${user.first}`,
+      statusz:   status === 'approved' ? 'Jóváhagyva' : 'Elutasítva',
+      uzenet:    status === 'approved'
+                   ? 'A regisztrációdat jóváhagytuk. Most már be tudsz jelentkezni a rendszerbe.'
+                   : 'A regisztrációdat elutasítottuk. További kérdéssel fordulj az adminisztrátorhoz.',
+      datum:     new Date().toLocaleString('hu-HU'),
+    });
+  } catch(e) {
+    console.warn('EmailJS értesítési hiba:', e);
+  }
 }
 
 function refreshAdmin() {
@@ -1590,26 +1615,28 @@ function closeModal() { document.getElementById('mod-detail').classList.remove('
 // ═══════════════════════════════════════════════════════
 function loadCfgForm() {
   const ejs = LS.get('mbf26_ejs') || {};
-  document.getElementById('cfg-ejs-service').value  = ejs.service  || '';
-  document.getElementById('cfg-ejs-template').value = ejs.template || '';
-  document.getElementById('cfg-ejs-pubkey').value   = ejs.pubkey   || '';
-  document.getElementById('cfg-ejs-to').value       = ejs.to       || '';
+  document.getElementById('cfg-ejs-service').value       = ejs.service       || '';
+  document.getElementById('cfg-ejs-template').value      = ejs.template      || '';
+  document.getElementById('cfg-ejs-user-template').value = ejs.userTemplate  || '';
+  document.getElementById('cfg-ejs-pubkey').value        = ejs.pubkey        || '';
+  document.getElementById('cfg-ejs-to').value            = ejs.to            || '';
 }
 
 function saveCfg() {
-  const service  = document.getElementById('cfg-ejs-service').value.trim();
-  const template = document.getElementById('cfg-ejs-template').value.trim();
-  const pubkey   = document.getElementById('cfg-ejs-pubkey').value.trim();
-  const to       = document.getElementById('cfg-ejs-to').value.trim();
-  if (service && template && pubkey) {
-    LS.set('mbf26_ejs', { service, template, pubkey, to });
+  const service      = document.getElementById('cfg-ejs-service').value.trim();
+  const template     = document.getElementById('cfg-ejs-template').value.trim();
+  const userTemplate = document.getElementById('cfg-ejs-user-template').value.trim();
+  const pubkey       = document.getElementById('cfg-ejs-pubkey').value.trim();
+  const to           = document.getElementById('cfg-ejs-to').value.trim();
+  if (service && pubkey) {
+    LS.set('mbf26_ejs', { service, template, userTemplate, pubkey, to });
     emailjs.init(pubkey);
     document.getElementById('cfg-alert').innerHTML =
       '<div class="alert alert-ok">✓ EmailJS beállítások elmentve.</div>';
     setTimeout(() => { document.getElementById('cfg-alert').innerHTML = ''; }, 3000);
   } else {
     document.getElementById('cfg-alert').innerHTML =
-      errHtml('Kérjük, töltsd ki a Service ID, Template ID és Public Key mezőket is!');
+      errHtml('Kérjük, töltsd ki legalább a Service ID és Public Key mezőket!');
   }
 }
 
