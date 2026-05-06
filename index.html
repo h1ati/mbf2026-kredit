@@ -571,15 +571,19 @@ service cloud.firestore {
             <div><div class="act-lbl">MBF Konferencián előadás</div><div class="act-pts">4 kredit (ha előadott)</div></div>
             <input type="checkbox" class="chk" id="ap" onchange="liveCalc()">
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">Más szakmai konferencián előadás</div><div class="act-pts">3 kredit / előadás</div></div>
-            <input type="number" class="num-in" id="aq" min="0" max="20" value="0" onchange="liveCalc()">
-            <textarea id="aq-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a szakmai konferenciákat..."></textarea>
+          <div class="act-lbl" style="margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
+          <div id="q-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('q')" style="margin-top:6px">+ Konferencia megnevezése <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Előadások száma → kredit:</span>
+            <span><span id="q-count">0</span> db × 3 = <strong id="q-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">Más konferencián részvétel (jelentéssel)</div><div class="act-pts">2 kredit / alkalom</div></div>
-            <input type="number" class="num-in" id="ar" min="0" max="20" value="0" onchange="liveCalc()">
-            <textarea id="ar-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a konferenciákat..."></textarea>
+          <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">Más konferencián részvétel (jelentéssel) <span class="act-pts">2 kredit / alkalom</span></div>
+          <div id="r-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('r')" style="margin-top:6px">+ Konferencia megnevezése <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Részvételek száma → kredit:</span>
+            <span><span id="r-count">0</span> db × 2 = <strong id="r-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
@@ -590,10 +594,12 @@ service cloud.firestore {
             <input type="number" class="num-in" id="as" min="0" max="40" value="0" onchange="liveCalc()">
             <textarea id="as-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg az egyéni vállalásaidat..."></textarea>
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">CSR tevékenység MBF nevében</div><div class="act-pts">2 kredit / esemény</div></div>
-            <input type="number" class="num-in" id="at" min="0" max="20" value="0" onchange="liveCalc()">
-            <textarea id="at-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg a CSR tevékenységeket..."></textarea>
+          <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">CSR tevékenység MBF nevében <span class="act-pts">2 kredit / esemény</span></div>
+          <div id="t-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('t')" style="margin-top:6px">+ Tevékenység megnevezése <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">CSR tevékenységek száma → kredit:</span>
+            <span><span id="t-count">0</span> db × 2 = <strong id="t-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
@@ -1120,21 +1126,27 @@ function updateGCount() {
 }
 
 let wgCounter = 0;
+const WG_CFG = {
+  k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
+  l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
+  q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia megnevezése' },
+  r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése' },
+  t: { credits: 2, label: 'CSR',         placeholder: 'Tevékenység megnevezése' },
+};
 
 function addWg(type, data = {}) {
   wgCounter++;
-  const id      = 'wg_' + type + '_' + wgCounter;
-  const credits = type === 'k' ? 2 : 3;
-  const n       = document.querySelectorAll('#' + type + '-wgs .pub-card').length + 1;
-  const label   = type === 'k' ? 'Részvétel' : 'Koordinálás';
+  const cfg = WG_CFG[type];
+  const id  = 'wg_' + type + '_' + wgCounter;
+  const n   = document.querySelectorAll('#' + type + '-wgs .pub-card').length + 1;
   document.getElementById(type + '-wgs').insertAdjacentHTML('beforeend', `
     <div class="pub-card" id="${id}">
       <div class="pub-card-head">
-        <span class="pub-card-title">${label} #${n}</span>
+        <span class="pub-card-title">${cfg.label} #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removeWg('${id}','${type}')">× Törlés</button>
       </div>
       <input type="text" class="wg-name" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em"
-             placeholder="Munkacsoport megnevezése" value="${esc(data.name||'')}">
+             placeholder="${cfg.placeholder}" value="${esc(data.name||'')}">
     </div>
   `);
   updateWgCount(type);
@@ -1142,7 +1154,7 @@ function addWg(type, data = {}) {
 
 function removeWg(id, type) {
   document.getElementById(id).remove();
-  const label = type === 'k' ? 'Részvétel' : 'Koordinálás';
+  const label = WG_CFG[type].label;
   document.querySelectorAll('#' + type + '-wgs .pub-card .pub-card-title').forEach((el,i) => {
     el.textContent = label + ' #' + (i + 1);
   });
@@ -1150,10 +1162,10 @@ function removeWg(id, type) {
 }
 
 function updateWgCount(type) {
-  const credits = type === 'k' ? 2 : 3;
-  const n = document.querySelectorAll('#' + type + '-wgs .pub-card').length;
+  const cfg = WG_CFG[type];
+  const n   = document.querySelectorAll('#' + type + '-wgs .pub-card').length;
   document.getElementById(type + '-count').textContent = n;
-  document.getElementById(type + '-cred').textContent  = n * credits;
+  document.getElementById(type + '-cred').textContent  = n * cfg.credits;
   liveCalc();
 }
 
@@ -1204,8 +1216,8 @@ function getForm() {
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
     k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: num('am'), n: num('an'),
-    o: chk('ao'), p: chk('ap'), q: num('aq'), q_names: v('aq-names'), r: num('ar'), r_names: v('ar-names'),
-    s: num('as'), s_names: v('as-names'), t: num('at'), t_names: v('at-names'),
+    o: chk('ao'), p: chk('ap'), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
+    s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
     notes: v('a-notes')
   };
 }
@@ -1215,6 +1227,9 @@ function liveCalc() {
   form.g = document.querySelectorAll('#g-pubs .pub-card').length;
   form.k = document.querySelectorAll('#k-wgs .pub-card').length;
   form.l = document.querySelectorAll('#l-wgs .pub-card').length;
+  form.q = document.querySelectorAll('#q-wgs .pub-card').length;
+  form.r = document.querySelectorAll('#r-wgs .pub-card').length;
+  form.t = document.querySelectorAll('#t-wgs .pub-card').length;
   document.getElementById('prev-n').textContent = calcCredits(form);
 }
 
@@ -1243,10 +1258,10 @@ async function loadActForm() {
     (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
     setNum('am',rec.m); setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p);
-    setNum('aq',rec.q); document.getElementById('aq-names').value = rec.q_names || '';
-    setNum('ar',rec.r); document.getElementById('ar-names').value = rec.r_names || '';
+    (rec.q_wgs || Array(rec.q||0).fill({})).forEach(w => addWg('q', w));
+    (rec.r_wgs || Array(rec.r||0).fill({})).forEach(w => addWg('r', w));
     setNum('as',rec.s); document.getElementById('as-names').value = rec.s_names || '';
-    setNum('at',rec.t); document.getElementById('at-names').value = rec.t_names || '';
+    (rec.t_wgs || Array(rec.t||0).fill({})).forEach(w => addWg('t', w));
     document.getElementById('a-notes').value = rec.notes || '';
   } else {
     resetForm();
@@ -1257,7 +1272,7 @@ async function loadActForm() {
 
 function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
-  ['ah','aj','am','an','aq','ar','as','at'].forEach(id => setNum(id, 0));
+  ['ah','aj','am','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-link').value = '';
   const lnk = document.getElementById('af-file-link');
   lnk.style.display = 'none'; lnk.href = '#';
@@ -1266,12 +1281,8 @@ function resetForm() {
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   Object.keys(pendingFiles).forEach(k => delete pendingFiles[k]);
-  document.getElementById('k-wgs').innerHTML = '';
-  document.getElementById('l-wgs').innerHTML = '';
-  document.getElementById('aq-names').value = '';
-  document.getElementById('ar-names').value = '';
+  ['k','l','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
   document.getElementById('as-names').value = '';
-  document.getElementById('at-names').value = '';
   document.getElementById('a-notes').value = '';
   updateGCount();
   liveCalc();
