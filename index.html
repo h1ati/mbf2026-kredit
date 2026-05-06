@@ -1039,6 +1039,10 @@ function calcCredits(a) {
          (a.s||0) + ((a.t||0) * 2);
 }
 
+function isPass(a) {
+  return a && a.e && a.f && (a.total || calcCredits(a)) >= 10;
+}
+
 // ── Publication management ────────────────────────────
 function addPub(data = {}) {
   pubCounter++;
@@ -1262,7 +1266,7 @@ async function saveActs() {
     const now   = firebase.firestore.FieldValue.serverTimestamp();
     const data  = { uid: currentUser.id, year: 2026, ...form, total: tot, updated: now };
     await db.collection('activities').doc(docId).set(data, { merge: true });
-    updateSideBar(tot);
+    updateSideBar(tot, data);
     document.getElementById('act-alert').innerHTML =
       `<div class="alert alert-ok">✓ Sikeresen mentve! Összesen: <strong>${tot} kredit</strong></div>`;
     setTimeout(() => { document.getElementById('act-alert').innerHTML = ''; }, 4000);
@@ -1294,32 +1298,37 @@ async function getUserActivity(uid) {
   return snap.exists ? { id: snap.id, ...snap.data() } : null;
 }
 
-function updateSideBar(total) {
+function updateSideBar(total, rec) {
   const tot = total !== undefined ? total : 0;
+  const pass = rec ? isPass(rec) : false;
   const pct = Math.min(100, (tot / 10) * 100);
   document.getElementById('side-num').textContent = tot;
   const bar = document.getElementById('side-bar');
   bar.style.width      = pct + '%';
-  bar.style.background = tot >= 10 ? 'var(--ok)' : tot >= 5 ? 'var(--warn)' : 'var(--err)';
+  bar.style.background = pass ? 'var(--ok)' : tot >= 5 ? 'var(--warn)' : 'var(--err)';
   document.getElementById('side-badge').innerHTML =
-    tot >= 10 ? badge('✓ Megfelelő','b-ok') : badge('✗ Nem megfelelő','b-err');
+    pass ? badge('✓ Megfelelő','b-ok') : badge('✗ Nem megfelelő','b-err');
 }
 
 async function renderUserDash() {
   const rec = await getUserActivity(currentUser.id);
   const tot = rec ? rec.total : 0;
   document.getElementById('u-big-num').textContent = tot;
-  updateSideBar(tot);
+  updateSideBar(tot, rec);
   const b = document.getElementById('u-big-badge');
   if (!rec) {
     b.style.display = 'none';
     document.getElementById('u-summ').innerHTML =
       `<div class="empty"><div class="empty-ico">📝</div><p>Még nem rögzítettél aktivitásokat.</p></div>`;
-  } else if (tot >= 10) {
+  } else if (isPass(rec)) {
     b.textContent = '✓ Megfelelő — Teljesítette a minimumkövetelményt'; b.className = 'cred-badge cb-ok'; b.style.display = '';
     document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
   } else {
-    b.textContent = `✗ Nem megfelelő — még ${10 - tot} kredit hiányzik`; b.className = 'cred-badge cb-fail'; b.style.display = '';
+    const missing = [];
+    if (!rec.e) missing.push('kötelező adatszolgáltatás hiányzik');
+    if (!rec.f) missing.push('kötelező publikáció hiányzik');
+    if (tot < 10) missing.push(`még ${10 - tot} kredit hiányzik`);
+    b.textContent = `✗ Nem megfelelő — ${missing.join(', ')}`; b.className = 'cred-badge cb-fail'; b.style.display = '';
     document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
   }
 }
@@ -1355,14 +1364,14 @@ async function renderAOverview() {
   const acts  = actsSnap.docs.map(d => ({id:d.id,...d.data()}));
   const appr  = users.filter(u => u.status === 'approved');
   const pend  = users.filter(u => u.status === 'pending');
-  const pass  = acts.filter(a => a.total >= 10);
-  const fail  = acts.filter(a => a.total < 10);
+  const pass  = acts.filter(a => isPass(a));
+  const fail  = acts.filter(a => !isPass(a));
   const nodat = appr.filter(u => !acts.find(a => a.uid === u.id));
 
   document.getElementById('a-stats').innerHTML = `
     <div class="stat"><div class="stat-n">${appr.length}</div><div class="stat-l">Jóváhagyott tag</div></div>
     <div class="stat"><div class="stat-n" style="color:var(--warn)">${pend.length}</div><div class="stat-l">Jóváhagyásra vár</div></div>
-    <div class="stat"><div class="stat-n" style="color:var(--ok)">${pass.length}</div><div class="stat-l">Megfelelő (≥10 kredit)</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--ok)">${pass.length}</div><div class="stat-l">Megfelelő</div></div>
     <div class="stat"><div class="stat-n" style="color:var(--err)">${fail.length}</div><div class="stat-l">Nem megfelelő</div></div>
     <div class="stat"><div class="stat-n" style="color:var(--muted)">${nodat.length}</div><div class="stat-l">Nem rögzített</div></div>
   `;
@@ -1429,8 +1438,8 @@ async function renderAMembers() {
     const sb  = u.status==='pending' ? badge('Várakozik','b-warn')
               : u.status==='approved'? badge('Jóváhagyva','b-ok')
               :                        badge('Elutasítva','b-err');
-    const rb  = tot===null ? badge('Nincs adat','b-sec')
-              : tot>=10    ? badge(`✓ Megfelelt (${tot})`,'b-ok')
+    const rb  = !rec       ? badge('Nincs adat','b-sec')
+              : isPass(rec)? badge(`✓ Megfelelt (${tot})`,'b-ok')
               :              badge(`✗ Nem felelt meg (${tot})`,'b-err');
     h += `<tr>
       <td><strong>${esc(u.last)} ${esc(u.first)}</strong></td>
@@ -1494,7 +1503,7 @@ async function renderAResults() {
   }
   const rows = users.map(u => {
     const rec = acts.find(a=>a.uid===u.id);
-    return { u, tot: rec?rec.total:null, notes: rec?rec.notes:'' };
+    return { u, rec, tot: rec?rec.total:null, notes: rec?rec.notes:'' };
   }).sort((a,b) => {
     if (a.tot===null && b.tot===null) return 0;
     if (a.tot===null) return 1; if (b.tot===null) return -1;
@@ -1502,16 +1511,17 @@ async function renderAResults() {
   });
   let h = '<div class="tbl-wrap"><table><tr><th>#</th><th>Név</th><th>Kredit</th><th>Haladás</th><th>Eredmény</th><th>Megjegyzés</th></tr>';
   rows.forEach((item,i) => {
-    const {u,tot,notes} = item;
+    const {u,rec,tot,notes} = item;
+    const pass = isPass(rec);
     const pct = tot!==null ? Math.min(100,(tot/10)*100) : 0;
-    const bc  = tot===null ? '#e9ecef' : tot>=10 ? 'var(--ok)' : tot>=5 ? 'var(--warn)' : 'var(--err)';
-    const rb  = tot===null ? badge('Nem rögzített','b-sec')
-              : tot>=10 ? `<span class="badge b-ok" style="font-size:.8rem;padding:4px 10px">✓ MEGFELELT</span>`
-              :           `<span class="badge b-err" style="font-size:.8rem;padding:4px 10px">✗ NEM FELELT MEG</span>`;
+    const bc  = tot===null ? '#e9ecef' : pass ? 'var(--ok)' : tot>=5 ? 'var(--warn)' : 'var(--err)';
+    const rb  = !rec  ? badge('Nem rögzített','b-sec')
+              : pass  ? `<span class="badge b-ok" style="font-size:.8rem;padding:4px 10px">✓ MEGFELELT</span>`
+              :         `<span class="badge b-err" style="font-size:.8rem;padding:4px 10px">✗ NEM FELELT MEG</span>`;
     h += `<tr>
       <td>${i+1}</td>
       <td><strong>${esc(u.last)} ${esc(u.first)}</strong><br><small>${esc(u.org||'')}</small></td>
-      <td style="font-size:1.2rem;font-weight:700;color:${tot!==null&&tot>=10?'var(--ok)':'var(--err)'}">${tot!==null?tot:'—'}</td>
+      <td style="font-size:1.2rem;font-weight:700;color:${pass?'var(--ok)':'var(--err)'}">${tot!==null?tot:'—'}</td>
       <td style="min-width:90px"><div class="prog"><div class="prog-bar" style="width:${pct}%;background:${bc}"></div></div></td>
       <td>${rb}</td>
       <td style="font-size:.8rem;color:var(--muted)">${notes?esc(notes):'—'}</td></tr>`;
@@ -1565,7 +1575,7 @@ async function openDetail(uid) {
     h += `<div style="background:linear-gradient(135deg,var(--primary),var(--primary-l));color:#fff;border-radius:12px;padding:18px;text-align:center;margin-bottom:16px">
       <div style="font-size:2.4rem;font-weight:700">${rec.total}</div>
       <div style="opacity:.75;font-size:.85rem">kredit pont</div>
-      <div style="margin-top:8px;font-size:.95rem;font-weight:700">${rec.total>=10?'✓ MEGFELELT':'✗ NEM FELELT MEG'}</div></div>`;
+      <div style="margin-top:8px;font-size:.95rem;font-weight:700">${isPass(rec)?'✓ MEGFELELT':'✗ NEM FELELT MEG'}</div></div>`;
     h += actTable(rec) + saveInfo(rec);
   }
   document.getElementById('mod-body').innerHTML = h;
