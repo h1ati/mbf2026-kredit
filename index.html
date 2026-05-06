@@ -542,9 +542,12 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">SECUSzerda</div>
-          <div class="act-row">
-            <div><div class="act-lbl">SECUSzerda téma vezető</div><div class="act-pts">2 kredit / téma</div></div>
-            <input type="number" class="num-in" id="am" min="0" max="20" value="0" onchange="liveCalc()">
+          <div class="act-lbl" style="margin-bottom:6px">SECUSzerda téma vezető <span class="act-pts">2 kredit / téma</span></div>
+          <div id="m-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('m')" style="margin-top:6px">+ Téma hozzáadása <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Témák száma → kredit:</span>
+            <span><span id="m-count">0</span> db × 2 = <strong id="m-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
           <div class="act-row">
             <div><div class="act-lbl">SECUSzerda rendezvényen részvétel</div><div class="act-pts">1 kredit / alkalom (max. 2 kredit / év)</div></div>
@@ -1093,6 +1096,7 @@ let wgCounter = 0;
 const WG_CFG = {
   k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
   l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
+  m: { credits: 2, label: 'Téma',        placeholder: 'Téma megnevezése' },
   q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia megnevezése' },
   r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése' },
   t: { credits: 2, label: 'CSR',         placeholder: 'Tevékenység megnevezése' },
@@ -1164,7 +1168,7 @@ function getForm() {
     g: gPubs.length,
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
-    k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: num('am'), n: num('an'),
+    k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: getWgs('m').length, m_wgs: getWgs('m'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
     s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
     notes: v('a-notes')
@@ -1176,6 +1180,7 @@ function liveCalc() {
   form.g = document.querySelectorAll('#g-pubs .pub-card').length;
   form.k = document.querySelectorAll('#k-wgs .pub-card').length;
   form.l = document.querySelectorAll('#l-wgs .pub-card').length;
+  form.m = document.querySelectorAll('#m-wgs .pub-card').length;
   form.q = document.querySelectorAll('#q-wgs .pub-card').length;
   form.r = document.querySelectorAll('#r-wgs .pub-card').length;
   form.t = document.querySelectorAll('#t-wgs .pub-card').length;
@@ -1196,6 +1201,7 @@ async function loadActForm() {
     setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
     (rec.k_wgs || Array(rec.k||0).fill({})).forEach(w => addWg('k', w));
     (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
+    (rec.m_wgs || Array(rec.m||0).fill({})).forEach(w => addWg('m', w));
     setNum('am',rec.m); setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p);
     (rec.q_wgs || Array(rec.q||0).fill({})).forEach(w => addWg('q', w));
@@ -1212,11 +1218,11 @@ async function loadActForm() {
 
 function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
-  ['ah','aj','am','an','as'].forEach(id => setNum(id, 0));
+  ['ah','aj','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-link').value = '';
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
-  ['k','l','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
+  ['k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
   document.getElementById('as-names').value = '';
   document.getElementById('a-notes').value = '';
   updateGCount();
