@@ -1194,12 +1194,16 @@ function getGPubs() {
 function getExt(name) { return (name.split('.').pop() || 'bin').toLowerCase(); }
 
 async function uploadFile(file, path) {
-  if (!storage) return null;
+  if (!storage) return { url: null, err: 'Firebase Storage nincs konfigurálva.' };
   try {
-    const ref  = storage.ref(path);
+    const ref = storage.ref(path);
     await ref.put(file);
-    return await ref.getDownloadURL();
-  } catch(e) { console.warn('Storage upload failed:', e); return null; }
+    const url = await ref.getDownloadURL();
+    return { url, err: null };
+  } catch(e) {
+    console.warn('Storage upload failed:', e);
+    return { url: null, err: e.message || 'Ismeretlen hiba' };
+  }
 }
 
 // ── Form helpers ──────────────────────────────────────
@@ -1209,9 +1213,9 @@ function getForm() {
     e: chk('ae'),
     f: chk('af'),
     f_link: document.getElementById('af-link').value.trim(),
-    f_file_url:  document.getElementById('af-file-link').href !== '#' ? document.getElementById('af-file-link').href : '',
+    f_file_url:  (function(){ const h = document.getElementById('af-file-link').getAttribute('href'); return (h && h !== '#') ? h : ''; })(),
     f_file_name: pendingFiles['af'] ? pendingFiles['af'].name
-               : (document.getElementById('af-file-link').textContent.replace('📎 ','') || ''),
+               : (document.getElementById('af-file-link').textContent.replace('📎 ','').trim() || ''),
     g: gPubs.length,
     g_pubs: gPubs,
     h: num('ah'), i: chk('ai'), j: num('aj'),
@@ -1296,17 +1300,19 @@ async function saveActs() {
     // Upload F file if pending
     if (pendingFiles['af']) {
       showFileSt('af-file-st', 'uploading', 'Feltöltés...');
-      const url = await uploadFile(pendingFiles['af'],
+      const res = await uploadFile(pendingFiles['af'],
         `publications/${currentUser.id}/f_${Date.now()}.${getExt(pendingFiles['af'].name)}`);
-      if (url) {
-        form.f_file_url  = url;
+      if (res.url) {
+        form.f_file_url  = res.url;
         form.f_file_name = pendingFiles['af'].name;
         const lnk = document.getElementById('af-file-link');
-        lnk.href = url; lnk.textContent = '📎 ' + pendingFiles['af'].name; lnk.style.display = 'inline';
+        lnk.setAttribute('href', res.url);
+        lnk.textContent = '📎 ' + pendingFiles['af'].name;
+        lnk.style.display = 'inline';
         delete pendingFiles['af'];
         showFileSt('af-file-st', 'ok', '✓ Feltöltve');
       } else {
-        showFileSt('af-file-st', 'err', 'Fájl feltöltés sikertelen (Storage nem elérhető). Link mentve.');
+        showFileSt('af-file-st', 'err', 'Fájl feltöltés sikertelen: ' + res.err);
       }
     }
 
@@ -1315,20 +1321,20 @@ async function saveActs() {
       const key = pub._id;
       if (pendingFiles[key]) {
         showFileSt('fst_' + key, 'uploading', 'Feltöltés...');
-        const url = await uploadFile(pendingFiles[key],
+        const res = await uploadFile(pendingFiles[key],
           `publications/${currentUser.id}/${key}_${Date.now()}.${getExt(pendingFiles[key].name)}`);
-        if (url) {
-          pub.file_url  = url;
+        if (res.url) {
+          pub.file_url  = res.url;
           pub.file_name = pendingFiles[key].name;
           const card = document.getElementById(key);
-          if (card) { card.dataset.fileUrl = url; card.dataset.fileName = pub.file_name; }
+          if (card) { card.dataset.fileUrl = res.url; card.dataset.fileName = pub.file_name; }
           delete pendingFiles[key];
           showFileSt('fst_' + key, 'ok', '✓ Feltöltve');
         } else {
-          showFileSt('fst_' + key, 'err', 'Feltöltés sikertelen. Csak link mentve.');
+          showFileSt('fst_' + key, 'err', 'Feltöltés sikertelen: ' + res.err);
         }
       }
-      delete pub._id; // ne mentse a Firestoreba
+      delete pub._id;
     }
 
     const tot   = calcCredits(form);
