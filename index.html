@@ -1015,7 +1015,8 @@ function showPg(p) {
 function uSection(s, el) {
   ['dash','act','hist'].forEach(x => {
     document.getElementById('us-' + x).classList.toggle('dn', x !== s);
-    document.getElementById('unl-' + x).classList.toggle('on', x === s);
+    const navEl = document.getElementById('unl-' + x);
+    if (navEl) navEl.classList.toggle('on', x === s);
   });
   if (s === 'act')  loadActForm();
   if (s === 'hist') renderUserHist();
