@@ -200,6 +200,10 @@ small{font-size:.8rem;color:var(--muted)}
 </style>
 </head>
 <body>
+<div id="app-loading" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px">
+  <img src="http://www.mbf.hu/wp-content/uploads/2017/12/mbf_logo.png" alt="MBF" style="max-width:160px">
+  <div style="color:#666;font-size:.9rem">Betöltés...</div>
+</div>
 
 <!-- ══════════════════════════════════════════
      GLOBAL LOADER
@@ -212,7 +216,7 @@ small{font-size:.8rem;color:var(--muted)}
 <!-- ══════════════════════════════════════════
      PAGE: SETUP WIZARD
 ══════════════════════════════════════════ -->
-<div id="pg-setup" class="page active">
+<div id="pg-setup" class="page">
 <div class="setup-wrap">
 <div class="setup-box">
   <div class="setup-head">
@@ -1008,6 +1012,7 @@ async function sendRegNotification(user) {
 //  PAGE ROUTING
 // ═══════════════════════════════════════════════════════
 function showPg(p) {
+  document.getElementById('app-loading').style.display = 'none';
   document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
   document.getElementById('pg-' + p).classList.add('active');
 }
