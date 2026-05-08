@@ -1381,7 +1381,7 @@ function addSWg(data = {}) {
   document.getElementById('s-wgs').insertAdjacentHTML('beforeend', `
     <div class="pub-card" id="${id}">
       <div class="pub-card-head">
-        <span class="pub-card-title">Vállalás #${n}</span>
+        <span class="pub-card-title">Egyéni vállalás #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removeSWg('${id}')">× Törlés</button>
       </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
@@ -1399,7 +1399,7 @@ function addSWg(data = {}) {
 function removeSWg(id) {
   document.getElementById(id).remove();
   document.querySelectorAll('#s-wgs .pub-card .pub-card-title').forEach((el,i) => {
-    el.textContent = 'Vállalás #' + (i + 1);
+    el.textContent = 'Egyéni vállalás #' + (i + 1);
   });
   updateSCount();
 }
@@ -1588,7 +1588,7 @@ function pruneEmpty() {
     if (!card.querySelector('.wg-name')?.value.trim()) card.remove();
   });
   document.querySelectorAll('#s-wgs .pub-card .pub-card-title').forEach((el,i) => {
-    el.textContent = 'Vállalás #' + (i + 1);
+    el.textContent = 'Egyéni vállalás #' + (i + 1);
   });
   updateSCount();
   document.querySelectorAll('#g-pubs .pub-card').forEach(card => {
