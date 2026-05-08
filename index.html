@@ -1646,6 +1646,7 @@ async function saveActs() {
     const now   = firebase.firestore.FieldValue.serverTimestamp();
     const data  = { uid: currentUser.id, year: 2026, ...form, total: tot, updated: now };
     await db.collection('activities').doc(docId).set(data, { merge: true });
+    _actCache[currentUser.id] = { id: docId, ...data };
     updateSideBar(tot, data);
     document.getElementById('act-alert').innerHTML =
       `<div class="alert alert-ok">✓ Sikeresen mentve! Összesen: <strong>${tot} kredit</strong></div>`;
@@ -1665,9 +1666,13 @@ async function renderUser() {
   renderUserDash();
 }
 
-async function getUserActivity(uid) {
+const _actCache = {};
+async function getUserActivity(uid, forceRefresh = false) {
+  if (!forceRefresh && _actCache[uid]) return _actCache[uid];
   const snap = await db.collection('activities').doc(`${uid}_2026`).get();
-  return snap.exists ? { id: snap.id, ...snap.data() } : null;
+  const result = snap.exists ? { id: snap.id, ...snap.data() } : null;
+  _actCache[uid] = result;
+  return result;
 }
 
 function updateSideBar(total, rec) {
