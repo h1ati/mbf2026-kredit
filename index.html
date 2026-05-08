@@ -615,7 +615,7 @@ service cloud.firestore {
           </div>
           <div class="act-lbl" style="margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
           <div id="q-wgs"></div>
-          <button class="btn btn-ghost btn-sm" onclick="addWg('q')" style="margin-top:6px">+ Konferencia megnevezése <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('q')" style="margin-top:6px">+ Konferencia / előadás megadása <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
           <div class="g-counter">
             <span style="color:var(--muted)">Előadások száma → kredit:</span>
             <span><span id="q-count">0</span> db × 3 = <strong id="q-cred" style="color:var(--primary)">0</strong> kredit</span>
@@ -1332,7 +1332,7 @@ const WG_CFG = {
   k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
   l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
   m: { credits: 1, label: 'Téma',        placeholder: 'Téma megnevezése' },
-  q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia megnevezése' },
+  q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia és előadás megadása' },
   r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése', hasFile: true },
   t: { credits: 2, label: 'CSR',         placeholder: 'Tevékenység megnevezése' },
 };
