@@ -521,6 +521,7 @@ service cloud.firestore {
       <div class="prog"><div class="prog-bar" id="side-bar" style="width:0%"></div></div>
       <div style="font-size:.72rem;color:var(--muted);margin-top:4px">Minimum: 10 kredit</div>
       <div class="mt2" id="side-badge"></div>
+      <div id="side-updated" style="font-size:.7rem;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"></div>
     </div>
   </div>
 
@@ -1909,6 +1910,8 @@ function updateSideBar(total, rec) {
   bar.style.background = pass ? 'var(--ok)' : tot >= 5 ? 'var(--warn)' : 'var(--err)';
   document.getElementById('side-badge').innerHTML =
     pass ? badge('✓ Megfelelő','b-ok') : badge('✗ Nem megfelelő','b-err');
+  const updEl = document.getElementById('side-updated');
+  if (updEl) updEl.textContent = rec && rec.updated ? 'Utolsó mentés: ' + fmtDate(rec.updated) : '';
 }
 
 async function renderUserDash() {
