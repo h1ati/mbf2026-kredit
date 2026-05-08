@@ -1982,7 +1982,7 @@ function actDetailPdf(r) {
   const row = (lbl, val, cr, sub='') => `
     <div class="row">
       <div class="row-lbl">${lbl}${sub ? `<div class="sub-row">${sub}</div>` : ''}</div>
-      <div class="row-val">${val||''}${cr ? `<span class="row-cr">${cr} kr</span>` : ''}</div>
+      <div class="row-val">${val||''}${cr ? `<span class="row-cr">${cr} kredit</span>` : ''}</div>
     </div>`;
   const link = (url, label) => url ? `<a href="${esc(url)}">${label ? esc(label) : esc(url)}</a>` : '';
   const wgLines = wgs => (wgs||[]).map(w => `<div>${esc(w.name||'—')}</div>`).join('');
@@ -2050,7 +2050,7 @@ function actDetailPdf(r) {
   if ((r.s||0)>0 || (r.t||0)>0) {
     h += S('Egyéb aktivitások');
     if ((r.s||0)>0) {
-      const sDetail = (r.s_wgs||[]).map(w => `<div style="font-size:10px">${esc(w.name||'—')} (${w.credits} kr)</div>`).join('');
+      const sDetail = (r.s_wgs||[]).map(w => `<div style="font-size:10px">${esc(w.name||'—')} (${w.credits} kredit)</div>`).join('');
       h += row('Egyéni vállalások', '', r.s||0, sDetail);
     }
     if ((r.t||0)>0) h += row(`CSR tevékenység MBF nevében (${r.t} esemény)`, '', (r.t||0)*2, wgLines(r.t_wgs));
@@ -2293,7 +2293,7 @@ function actDetail(r) {
       </div>
       <div style="text-align:right;white-space:nowrap;margin-left:12px">
         <span style="font-size:.875rem">${val}</span>
-        ${cr ? `<span style="font-size:.78rem;color:var(--primary);font-weight:600;margin-left:6px">${cr} kr</span>` : ''}
+        ${cr ? `<span style="font-size:.78rem;color:var(--primary);font-weight:600;margin-left:6px">${cr} kredit</span>` : ''}
       </div>
     </div>`;
   const dlBtn = (url, name) => url
@@ -2376,7 +2376,7 @@ function actDetail(r) {
   if (hasEgyeb) {
     h += S('Egyéb aktivitások');
     if ((r.s||0)>0) {
-      const sDetail = (r.s_wgs||[]).map(w => `<div style="font-size:.82rem;padding:2px 0">${esc(w.name||'—')} <span style="color:var(--primary);font-weight:600">(${w.credits} kr)</span></div>`).join('');
+      const sDetail = (r.s_wgs||[]).map(w => `<div style="font-size:.82rem;padding:2px 0">${esc(w.name||'—')} <span style="color:var(--primary);font-weight:600">(${w.credits} kredit)</span></div>`).join('');
       h += row(`Egyéni vállalások`, '', r.s||0, sDetail);
     }
     if ((r.t||0)>0) h += row(`CSR tevékenység MBF nevében (${r.t} esemény)`, '', (r.t||0)*2, wgList(r.t_wgs));
