@@ -792,7 +792,7 @@ service cloud.firestore {
           <tr><td>📚 <strong>Tagi aktivitások és publikációk</strong></td><td>Minden tag aktivitásának megtekintése (csak olvasható nézet).</td></tr>
           <tr><td>📖 <strong>Felhasználói útmutató</strong></td><td>Ez a dokumentum.</td></tr>
         </table>
-        <div class="info-box">A jobb felső sarokban látható a bejelentkezett felhasználó neve és egy <strong>„Kijelentkezés"</strong> gomb.</div>
+        <div class="info-box">A jobb felső sarokban látható a bejelentkezett felhasználó neve és egy <strong>„Kijelentkezés"</strong> gomb. A bal oldali navigációs sáv alatt egy kisebb kártyán látható az összesített kredit pontszám, a megfelelőségi státusz, valamint a rendszer <strong>utolsó frissítésének dátuma és időpontja</strong>.</div>
 
         <h2 id="utm-aktivitasok">4. Aktivitások rögzítése</h2>
         <p>Az <strong>„Aktivitások rögzítése"</strong> menüponton az éves aktivitások adhatók meg. Az oldal tetején és alján egyaránt megtalálható a <strong>💾 Mentés</strong> gomb.</p>
@@ -868,14 +868,22 @@ service cloud.firestore {
         <p>Csak olvasható nézet az összes regisztrált tag aktivitásairól. A legördülő menüből szűrhetsz egyedi tag szerint (alapértelmezett: Összes tag).</p>
 
         <h2 id="utm-admin">8. Adminisztrátori funkciók</h2>
+        <p>Az adminisztrátori felület bal oldali navigációja alatt szintén megjelenik a rendszer utolsó frissítésének dátuma.</p>
         <table>
           <tr><th>Menüpont</th><th>Funkció</th></tr>
           <tr><td>📊 Áttekintés</td><td>Összesített statisztikák, kredit eloszlás.</td></tr>
           <tr><td>⏳ Jóváhagyás</td><td>Függőben lévő regisztrációk kezelése — automatikus email értesítővel.</td></tr>
-          <tr><td>👥 Tagok</td><td>Regisztrált tagok listája, törlési lehetőség.</td></tr>
+          <tr><td>👥 Tagok</td><td>Regisztrált tagok listája. Minden tagnál elérhető a <strong>„🗑 Tag törlése"</strong> gomb, amely törli a tag adatait az adatbázisból.</td></tr>
           <tr><td>🏆 Eredmények</td><td>A 2026-os év végeredménye.</td></tr>
-          <tr><td>⚙️ Beállítások</td><td>EmailJS értesítési beállítások.</td></tr>
+          <tr><td>⚙️ Beállítások</td><td>EmailJS értesítési beállítások, adatbázis kezelés.</td></tr>
         </table>
+        <h3>8.1 Tag törlése</h3>
+        <p>A <strong>„🗑 Tag törlése"</strong> gomb a tag összes adatát törli az adatbázisból (aktivitások és felhasználói profil). A bejelentkezési fiók törlése azonban a Firebase Console-on külön szükséges:</p>
+        <div class="utm-step"><div class="utm-step-num">1</div><div class="utm-step-txt">Nyisd meg a <strong>console.firebase.google.com</strong> oldalt.</div></div>
+        <div class="utm-step"><div class="utm-step-num">2</div><div class="utm-step-txt">Válaszd a <strong>mbf-kreditrendszer-2026</strong> projektet.</div></div>
+        <div class="utm-step"><div class="utm-step-num">3</div><div class="utm-step-txt">Bal menü: <strong>Authentication → Users</strong>.</div></div>
+        <div class="utm-step"><div class="utm-step-num">4</div><div class="utm-step-txt">Keresd meg a törölni kívánt email címet, majd a sor végén a <strong>⋮ menüből</strong> válaszd a <strong>Delete account</strong> lehetőséget.</div></div>
+        <div class="warn-box">Ha a Firebase Authentication fiókot nem törlöd, a felhasználó ugyanazzal az email címmel nem tud újra regisztrálni.</div>
 
         <h2 id="utm-gyik">9. Gyakori kérdések</h2>
         <h3>Mikor lesz a rendszerem „Megfelelő" státuszú?</h3>
