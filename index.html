@@ -463,6 +463,7 @@ service cloud.firestore {
       <ul class="nav-menu">
         <li class="nav-item"><div class="nav-lnk on" id="unl-dash" onclick="uSection('dash',this)"><span class="nav-ico">📊</span> Összesítő</div></li>
         <li class="nav-item"><div class="nav-lnk" id="unl-act" onclick="uSection('act',this)"><span class="nav-ico">✏️</span> Aktivitások rögzítése</div></li>
+        <li class="nav-item"><div class="nav-lnk" id="unl-pubs" onclick="uSection('pubs',this)"><span class="nav-ico">📚</span> Feltöltött publikációk</div></li>
       </ul>
     </div>
     <div class="card side-credits">
@@ -644,6 +645,13 @@ service cloud.firestore {
       <div class="card">
         <div class="card-title">Rögzített aktivitások</div>
         <div id="u-hist"><div class="loading-row">Betöltés...</div></div>
+      </div>
+    </div>
+
+    <div id="us-pubs" class="dn">
+      <div class="card">
+        <div class="card-title">Feltöltött publikációk</div>
+        <div id="u-pubs-list"><div class="loading-row">Betöltés...</div></div>
       </div>
     </div>
   </div>
@@ -1070,7 +1078,7 @@ function showPg(p) {
 }
 
 function uSection(s, el) {
-  ['dash','act','hist'].forEach(x => {
+  ['dash','act','hist','pubs'].forEach(x => {
     document.getElementById('us-' + x).classList.toggle('dn', x !== s);
     const navEl = document.getElementById('unl-' + x);
     if (navEl) navEl.classList.toggle('on', x === s);
@@ -1078,6 +1086,7 @@ function uSection(s, el) {
   if (s === 'act')  loadActForm();
   if (s === 'hist') renderUserHist();
   if (s === 'dash') renderUserDash();
+  if (s === 'pubs') renderUserPubs();
 }
 
 function aSection(s, el) {
@@ -1396,6 +1405,66 @@ async function renderUserHist() {
   } else {
     el.innerHTML = actTable(rec) + saveInfo(rec) +
       `<button class="btn btn-ghost btn-sm mt2" onclick="uSection('act',document.getElementById('unl-act'))">✏️ Szerkesztés</button>`;
+  }
+}
+
+async function renderUserPubs() {
+  const el = document.getElementById('u-pubs-list');
+  el.innerHTML = '<div class="loading-row">Betöltés...</div>';
+  try {
+    const [usersSnap, actsSnap] = await Promise.all([
+      db.collection('users').where('role','==','user').where('status','==','approved').get(),
+      db.collection('activities').where('year','==',2026).get()
+    ]);
+    const users = {};
+    usersSnap.docs.forEach(d => { users[d.id] = d.data(); });
+    const acts  = actsSnap.docs.map(d => ({uid:d.data().uid,...d.data()}));
+
+    const rows = acts
+      .filter(a => {
+        const u = users[a.uid];
+        return u && (a.f_title || (a.g_pubs && a.g_pubs.length));
+      })
+      .sort((a,b) => {
+        const na = (users[a.uid]?.last||'') + (users[a.uid]?.first||'');
+        const nb = (users[b.uid]?.last||'') + (users[b.uid]?.first||'');
+        return na.localeCompare(nb, 'hu');
+      });
+
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-ico">📚</div><p>Még nincs feltöltött publikáció.</p></div>';
+      return;
+    }
+
+    el.innerHTML = rows.map(a => {
+      const u    = users[a.uid];
+      const name = u ? `${u.last} ${u.first}` : '—';
+
+      const kotelező = a.f_title ? `
+        <div style="margin-bottom:6px">
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Kötelező publikáció</div>
+          <div style="font-weight:600">${esc(a.f_title)}</div>
+          ${a.f_link ? `<a href="${esc(a.f_link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">${esc(a.f_link)}</a>` : ''}
+        </div>` : '';
+
+      const tovabbi = (a.g_pubs && a.g_pubs.length) ? `
+        <div>
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">További publikációk</div>
+          ${a.g_pubs.map((p,i) => `
+            <div style="padding:6px 0;${i>0?'border-top:1px solid #f0f0f0':''}">
+              <div style="font-weight:600">${p.title ? esc(p.title) : '<em style="color:var(--muted)">cím nélkül</em>'}</div>
+              ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">${esc(p.link)}</a>` : ''}
+            </div>`).join('')}
+        </div>` : '';
+
+      return `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+          <div style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">${esc(name)}</div>
+          ${kotelező}${tovabbi}
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="alert alert-err">Betöltési hiba: ' + e.message + '</div>';
   }
 }
 
