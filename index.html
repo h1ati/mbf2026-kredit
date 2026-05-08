@@ -540,9 +540,12 @@ service cloud.firestore {
             <div><div class="act-lbl">Tisztségviselői pozíció (elnök / titkár / bizottsági elnökök)</div><div class="act-pts">4 kredit (ha igen)</div></div>
             <input type="checkbox" class="chk" id="ai" onchange="liveCalc()">
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">Bizottsági tagságok száma</div><div class="act-pts">3 kredit / bizottság</div></div>
-            <input type="number" class="num-in" id="aj" min="0" max="20" value="0" onchange="liveCalc()">
+          <div class="act-lbl" style="margin-bottom:6px;margin-top:12px">Bizottsági tagságok száma <span class="act-pts">3 kredit / bizottság</span></div>
+          <div id="j-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('j')" style="margin-top:6px">+ Bizottsági tagság hozzáadása <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Bizottságok száma → kredit:</span>
+            <span><span id="j-count">0</span> db × 3 = <strong id="j-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
@@ -1160,6 +1163,7 @@ function updateGCount() {
 
 let wgCounter = 0;
 const WG_CFG = {
+  j: { credits: 3, label: 'Bizottság',   placeholder: 'Bizottság megnevezése' },
   k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
   l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
   m: { credits: 1, label: 'Téma',        placeholder: 'Téma megnevezése' },
@@ -1242,7 +1246,7 @@ function getForm() {
     f_link: document.getElementById('af-link').value.trim(),
     g: gPubs.length,
     g_pubs: gPubs,
-    h: num('ah'), i: chk('ai'), j: num('aj'),
+    h: num('ah'), i: chk('ai'), j: getWgs('j').length, j_wgs: getWgs('j'),
     k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: getWgs('m').length, m_wgs: getWgs('m'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
     s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
@@ -1274,7 +1278,8 @@ async function loadActForm() {
     document.getElementById('af-link').value = rec.f_link || '';
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
-    setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
+    setNum('ah',rec.h); setChk('ai',rec.i);
+    (rec.j_wgs || Array(rec.j||0).fill({})).forEach(w => addWg('j', w));
     (rec.k_wgs || Array(rec.k||0).fill({})).forEach(w => addWg('k', w));
     (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
     (rec.m_wgs || Array(rec.m||0).fill({})).forEach(w => addWg('m', w));
@@ -1294,12 +1299,12 @@ async function loadActForm() {
 
 function resetForm() {
   ['ae','ai','ao','ap'].forEach(id => setChk(id, false));
-  ['ah','aj','an','as'].forEach(id => setNum(id, 0));
+  ['ah','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-title').value   = '';
   document.getElementById('af-link').value = '';
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
-  ['k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
+  ['j','k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
   document.getElementById('as-names').value = '';
   document.getElementById('a-notes').value = '';
   updateGCount();
@@ -1307,7 +1312,7 @@ function resetForm() {
 }
 
 function pruneEmpty() {
-  ['k','l','m','q','r','t'].forEach(type => {
+  ['j','k','l','m','q','r','t'].forEach(type => {
     document.querySelectorAll('#' + type + '-wgs .pub-card').forEach(card => {
       if (!card.querySelector('.wg-name')?.value.trim()) card.remove();
     });
