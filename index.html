@@ -554,9 +554,9 @@ service cloud.firestore {
             <div><div class="act-lbl">Közgyűlésen részvétel</div><div class="act-pts">1 kredit / közgyűlés</div></div>
             <input type="number" class="num-in" id="ah" min="0" max="20" value="0" onchange="liveCalc()">
           </div>
-          <div class="act-row">
-            <div><div class="act-lbl">Tisztségviselői pozíció (elnök / titkár / bizottsági elnökök)</div><div class="act-pts">4 kredit (ha igen)</div></div>
-            <input type="checkbox" class="chk" id="ai" onchange="liveCalc()">
+          <div style="padding:9px 0;border-bottom:1px solid #f0f0f0">
+            <div class="act-lbl" style="margin-bottom:6px">Tisztségviselői pozíció (elnök / titkár / bizottsági elnökök) <span class="act-pts">4 kredit (ha van)</span></div>
+            <input type="text" id="ai-text" placeholder="Tisztség megadása" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.875rem" oninput="liveCalc()">
           </div>
           <div class="act-lbl" style="margin-bottom:6px;margin-top:12px">Bizottsági tagságok száma <span class="act-pts">3 kredit / bizottság</span></div>
           <div id="j-wgs"></div>
@@ -1433,7 +1433,10 @@ function getForm() {
     f_link: document.getElementById('af-link').value.trim(),
     g: gPubs.length,
     g_pubs: gPubs,
-    h: num('ah'), i: chk('ai'), j: getWgs('j').length, j_wgs: getWgs('j'),
+    h: num('ah'),
+    i_text: document.getElementById('ai-text').value.trim(),
+    i: !!document.getElementById('ai-text').value.trim(),
+    j: getWgs('j').length, j_wgs: getWgs('j'),
     k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: getWgs('m').length, m_wgs: getWgs('m'), n: num('an'),
     o: chk('ao'), p: chk('ap'), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
     s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
@@ -1466,7 +1469,8 @@ async function loadActForm() {
     setPubFileInfo(rec.f_file_url || '', rec.f_file_name || '');
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
-    setNum('ah',rec.h); setChk('ai',rec.i);
+    setNum('ah',rec.h);
+    document.getElementById('ai-text').value = rec.i_text || '';
     (rec.j_wgs || Array(rec.j||0).fill({})).forEach(w => addWg('j', w));
     (rec.k_wgs || Array(rec.k||0).fill({})).forEach(w => addWg('k', w));
     (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
@@ -1486,7 +1490,8 @@ async function loadActForm() {
 }
 
 function resetForm() {
-  ['ae','ai','ao','ap'].forEach(id => setChk(id, false));
+  ['ae','ao','ap'].forEach(id => setChk(id, false));
+  document.getElementById('ai-text').value = '';
   ['ah','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-title').value = '';
   document.getElementById('af-link').value  = '';
@@ -2017,7 +2022,7 @@ function actTable(r) {
       })()
     },
     { lbl:'Közgyűlésen részvétel',             disp:r.h+' alkalom',        credits:r.h,             val:r.h>0 },
-    { lbl:'Tisztségviselői pozíció',           disp:r.i?'Igen':'Nem',      credits:r.i?4:0,         val:r.i },
+    { lbl:'Tisztségviselői pozíció',           disp:r.i_text||'—',         credits:r.i?4:0,         val:r.i },
     { lbl:'Bizottsági tagság',                 disp:r.j+' db',             credits:r.j*3,           val:r.j>0 },
     { lbl:'Munkacsoport részvétel',            disp:r.k+' db',             credits:r.k*2,           val:r.k>0 },
     { lbl:'Munkacsoport koordinálás',          disp:r.l+' téma',           credits:r.l*3,           val:r.l>0 },
