@@ -587,7 +587,7 @@ service cloud.firestore {
           </div>
           <div class="act-row">
             <div><div class="act-lbl">MBF Konferencián előadás vagy közreműködés a lebonyolításban<span class="info-icon">i<span class="info-tip">Előadó vagy közreműködés a konferencia lebonyolításában, pl.: műsorvezetés, pódium beszélgetés részvétel, technikai csapat tagja.</span></span></div><div class="act-pts">2 kredit (ha előadott vagy közreműködött)</div></div>
-            <input type="checkbox" class="chk" id="ap" onchange="liveCalc()">
+            <input type="checkbox" class="chk" id="ap" onchange="if(this.checked)document.getElementById('ao').checked=true;liveCalc()">
           </div>
           <div class="act-lbl" style="margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
           <div id="q-wgs"></div>
