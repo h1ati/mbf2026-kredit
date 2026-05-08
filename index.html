@@ -198,6 +198,12 @@ tr:hover td{background:#f8f9fa}
 .df{display:flex}.jb{justify-content:space-between}.ac{align-items:center}.g1{gap:8px}
 .dn{display:none}
 small{font-size:.8rem;color:var(--muted)}
+.file-upload-box{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;background:#fafbfc}
+.file-upload-box:hover{border-color:var(--primary-l)}
+.file-info{display:flex;align-items:center;gap:10px;background:#f0f4f8;border-radius:8px;padding:10px 14px;margin-top:8px}
+.file-info-name{flex:1;font-size:.85rem;font-weight:600;color:var(--primary);word-break:break-all}
+.file-info a{font-size:.8rem;color:var(--primary-l);text-decoration:none}
+.file-info a:hover{text-decoration:underline}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--primary-l);color:#fff;font-size:.65rem;font-weight:700;cursor:default;position:relative;vertical-align:middle;margin-left:5px;flex-shrink:0}
 .info-icon .info-tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a2332;color:#fff;font-size:.78rem;font-weight:400;line-height:1.4;padding:8px 12px;border-radius:8px;white-space:normal;width:260px;z-index:999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .info-icon .info-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1a2332}
@@ -512,6 +518,18 @@ service cloud.firestore {
               </div>
               <div style="font-size:.8rem;font-weight:600;padding:4px 0 8px">Publikáció részletei</div>
               <div class="fg">
+                <label style="font-size:.8rem;font-weight:600">Fájl feltöltése (opcionális)</label>
+                <input type="file" id="af-file-input" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg" onchange="uploadPubFile(this)">
+                <div id="af-file-area">
+                  <div class="file-upload-box" onclick="document.getElementById('af-file-input').click()">
+                    <span style="font-size:.85rem;color:var(--muted)">📎 Kattints a fájl kiválasztásához</span>
+                    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">PDF, Word, Excel, PowerPoint, kép</div>
+                  </div>
+                </div>
+                <div id="af-file-info" class="dn"></div>
+                <div id="af-file-alert" style="margin-top:6px"></div>
+              </div>
+              <div class="fg">
                 <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
                 <input type="url" id="af-link" placeholder="https://...">
               </div>
@@ -778,6 +796,10 @@ let auth, db;
 let currentUser = null;
 let _rejectedFlag = false;
 let pubCounter = 0;
+let _pubFileUrl  = '';
+let _pubFileName = '';
+const CLOUDINARY_CLOUD  = 'dggwx6jts';
+const CLOUDINARY_PRESET = 'mbf2026kredit_unsigned';
 
 const LS = {
   get:    k     => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -1070,6 +1092,59 @@ async function sendRegNotification(user) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  CLOUDINARY FILE UPLOAD
+// ═══════════════════════════════════════════════════════
+async function uploadPubFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const alertEl = document.getElementById('af-file-alert');
+  const areaEl  = document.getElementById('af-file-area');
+  alertEl.innerHTML = '<div class="alert" style="background:#e8f4fd;color:#1a3a5c;padding:8px 12px;border-radius:6px;font-size:.83rem">⏳ Feltöltés folyamatban...</div>';
+  areaEl.style.opacity = '.5';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('folder', 'mbf2026/' + (currentUser?.id || 'unknown'));
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, { method:'POST', body:fd });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    setPubFileInfo(data.secure_url, file.name);
+    alertEl.innerHTML = '';
+  } catch(e) {
+    alertEl.innerHTML = errHtml('Feltöltési hiba: ' + e.message);
+  } finally {
+    areaEl.style.opacity = '';
+    input.value = '';
+  }
+}
+
+function setPubFileInfo(url, name) {
+  _pubFileUrl  = url;
+  _pubFileName = name;
+  const areaEl = document.getElementById('af-file-area');
+  const infoEl = document.getElementById('af-file-info');
+  if (url) {
+    areaEl.classList.add('dn');
+    infoEl.classList.remove('dn');
+    infoEl.innerHTML = `<div class="file-info">
+      <span class="file-info-name">📄 ${esc(name || 'Feltöltött fájl')}</span>
+      <a href="${esc(url)}" target="_blank" rel="noopener">Megnyitás</a>
+      <button class="btn btn-err btn-sm" onclick="deletePubFile()" style="padding:4px 10px">× Törlés</button>
+    </div>`;
+  } else {
+    areaEl.classList.remove('dn');
+    infoEl.classList.add('dn');
+    infoEl.innerHTML = '';
+  }
+}
+
+function deletePubFile() {
+  if (!confirm('Biztosan törlöd a feltöltött fájlt?')) return;
+  setPubFileInfo('', '');
+}
+
+// ═══════════════════════════════════════════════════════
 //  PAGE ROUTING
 // ═══════════════════════════════════════════════════════
 function showPg(p) {
@@ -1243,6 +1318,8 @@ function getForm() {
     e: chk('ae'),
     f_title: document.getElementById('af-title').value.trim(),
     f: !!document.getElementById('af-title').value.trim(),
+    f_file_url:  _pubFileUrl  || '',
+    f_file_name: _pubFileName || '',
     f_link: document.getElementById('af-link').value.trim(),
     g: gPubs.length,
     g_pubs: gPubs,
@@ -1274,8 +1351,9 @@ async function loadActForm() {
 
   if (rec) {
     setChk('ae',rec.e);
-    document.getElementById('af-title').value   = rec.f_title   || '';
-    document.getElementById('af-link').value = rec.f_link || '';
+    document.getElementById('af-title').value = rec.f_title || '';
+    document.getElementById('af-link').value  = rec.f_link  || '';
+    setPubFileInfo(rec.f_file_url || '', rec.f_file_name || '');
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
     setNum('ah',rec.h); setChk('ai',rec.i);
@@ -1300,8 +1378,9 @@ async function loadActForm() {
 function resetForm() {
   ['ae','ai','ao','ap'].forEach(id => setChk(id, false));
   ['ah','an','as'].forEach(id => setNum(id, 0));
-  document.getElementById('af-title').value   = '';
-  document.getElementById('af-link').value = '';
+  document.getElementById('af-title').value = '';
+  document.getElementById('af-link').value  = '';
+  setPubFileInfo('', '');
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   ['j','k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
