@@ -2124,9 +2124,10 @@ async function renderAMembers() {
       <td>${rb}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="openDetail('${u.id}')">👁 Részletek</button>
-        ${u.status==='approved'
-          ? `<button class="btn btn-err btn-sm" style="margin-left:4px" onclick="rejectUser('${u.id}')">Letilt</button>`
-          : `<button class="btn btn-ok btn-sm" style="margin-left:4px" onclick="approveUser('${u.id}')">Jóváhagy</button>`}
+        ${u.status!=='approved'
+          ? `<button class="btn btn-ok btn-sm" style="margin-left:4px" onclick="approveUser('${u.id}')">Jóváhagy</button>`
+          : ''}
+        <button class="btn btn-err btn-sm" style="margin-left:4px" onclick="deleteUser('${u.id}','${esc(u.last)} ${esc(u.first)}')">🗑 Tag törlése</button>
       </td></tr>`;
   });
   el.innerHTML = h + '</table></div>';
@@ -2219,6 +2220,16 @@ async function rejectUser(uid) {
   const snap = await db.collection('users').doc(uid).get();
   await db.collection('users').doc(uid).update({ status: 'rejected' });
   if (snap.exists) sendStatusNotification(snap.data(), 'rejected');
+  refreshAdmin();
+}
+
+async function deleteUser(uid, name) {
+  if (!confirm(`Biztosan törlöd ezt a tagot?\n\n${name}\n\nA tag felhasználói fiókja és összes aktivitásadata véglegesen törlődik. Ez nem visszavonható.`)) return;
+  await Promise.all([
+    db.collection('users').doc(uid).delete(),
+    db.collection('activities').doc(`${uid}_2026`).delete()
+  ]);
+  delete _actCache[uid];
   refreshAdmin();
 }
 
