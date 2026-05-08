@@ -1717,7 +1717,7 @@ async function renderUserPubs() {
 
     const fileBtn = (url, name, label) =>
       `<button onclick="openFileModal('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 ${label||'Megnyitás'}</button>` +
-      `<a href="${esc(url)}" download="${esc(name)}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a>`;
+      `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">⬇ Letöltés</button>`;
 
     const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
 
@@ -2035,11 +2035,32 @@ async function openDetail(uid) {
 
 function closeModal() { document.getElementById('mod-detail').classList.remove('on'); }
 
+async function downloadFile(url, name) {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name || 'fajl';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  } catch(e) {
+    window.open(url, '_blank');
+  }
+}
+
 function openFileModal(url, name) {
   document.getElementById('mod-file-title').textContent = name || 'Fájl megtekintése';
-  document.getElementById('mod-file-frame').src = url;
+  const isPdf = /\.pdf$/i.test(name || url);
+  const frame = document.getElementById('mod-file-frame');
+  frame.src = isPdf
+    ? 'https://docs.google.com/viewer?url=' + encodeURIComponent(url) + '&embedded=true'
+    : url;
   const dl = document.getElementById('mod-file-dl');
-  dl.href = url; dl.download = name || 'fajl';
+  dl.href = '#';
+  dl.onclick = (e) => { e.preventDefault(); downloadFile(url, name || 'fajl'); };
   document.getElementById('mod-file').style.display = 'flex';
 }
 function closeFileModal() {
