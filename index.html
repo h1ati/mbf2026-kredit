@@ -608,7 +608,10 @@ service cloud.firestore {
           </div>
           <div class="act-row">
             <div><div class="act-lbl">MBF Konferencián előadás vagy közreműködés a lebonyolításban<span class="info-icon">i<span class="info-tip">Előadó vagy közreműködés a konferencia lebonyolításában, pl.: műsorvezetés, pódium beszélgetés részvétel, technikai csapat tagja.</span></span></div><div class="act-pts">2 kredit (ha előadott vagy közreműködött)</div></div>
-            <input type="checkbox" class="chk" id="ap" onchange="if(this.checked)document.getElementById('ao').checked=true;liveCalc()">
+            <input type="checkbox" class="chk" id="ap" onchange="if(this.checked)document.getElementById('ao').checked=true;document.getElementById('ap-text-row').style.display=this.checked?'block':'none';liveCalc()">
+          </div>
+          <div id="ap-text-row" style="display:none;margin-top:6px">
+            <input type="text" id="ap-text" placeholder="Közreműködés megnevezése" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.875rem" oninput="liveCalc()">
           </div>
           <div class="act-lbl" style="margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
           <div id="q-wgs"></div>
@@ -1438,7 +1441,7 @@ function getForm() {
     i: !!document.getElementById('ai-text').value.trim(),
     j: getWgs('j').length, j_wgs: getWgs('j'),
     k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: getWgs('m').length, m_wgs: getWgs('m'), n: num('an'),
-    o: chk('ao'), p: chk('ap'), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
+    o: chk('ao'), p: chk('ap'), p_text: document.getElementById('ap-text').value.trim(), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
     s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
     notes: v('a-notes')
   };
@@ -1477,6 +1480,8 @@ async function loadActForm() {
     (rec.m_wgs || Array(rec.m||0).fill({})).forEach(w => addWg('m', w));
     setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p);
+    document.getElementById('ap-text').value = rec.p_text || '';
+    document.getElementById('ap-text-row').style.display = rec.p ? 'block' : 'none';
     (rec.q_wgs || Array(rec.q||0).fill({})).forEach(w => addWg('q', w));
     (rec.r_wgs || Array(rec.r||0).fill({})).forEach(w => addWg('r', w));
     setNum('as',rec.s); document.getElementById('as-names').value = rec.s_names || '';
@@ -1491,6 +1496,8 @@ async function loadActForm() {
 
 function resetForm() {
   ['ae','ao','ap'].forEach(id => setChk(id, false));
+  document.getElementById('ap-text').value = '';
+  document.getElementById('ap-text-row').style.display = 'none';
   document.getElementById('ai-text').value = '';
   ['ah','an','as'].forEach(id => setNum(id, 0));
   document.getElementById('af-title').value = '';
@@ -2021,7 +2028,7 @@ function actTable(r) {
     { lbl:'SECUSzerda részvétel',              disp:r.n+' alkalom',        credits:Math.min(r.n,2), val:r.n>0 },
     { lbl:'SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*1,           val:r.m>0 },
     { lbl:'MBF Konferencia részvétel',         disp:r.o?'Igen':'Nem',      credits:r.o?2:0,         val:r.o },
-    { lbl:'MBF Konferencián előadás / közreműködés', disp:r.p?'Igen':'Nem', credits:r.p?2:0,         val:r.p },
+    { lbl:'MBF Konferencián előadás / közreműködés', disp:r.p?(r.p_text||'Igen'):'Nem', credits:r.p?2:0, val:r.p },
     { lbl:'Más szakmai konf. előadás',         disp:r.q+' alkalom',        credits:r.q*3,           val:r.q>0 },
     { lbl:'Más konf. részvétel (jelentéssel)', disp:r.r+' alkalom',        credits:r.r*2,           val:r.r>0 },
     { lbl:'Egyéni vállalások',                 disp:r.s+' kredit',         credits:r.s,             val:r.s>0 },
