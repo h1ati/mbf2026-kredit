@@ -1673,14 +1673,14 @@ async function renderUserDash() {
       `<div class="empty"><div class="empty-ico">📝</div><p>Még nem rögzítettél aktivitásokat.</p></div>`;
   } else if (isPass(rec)) {
     b.textContent = '✓ Megfelelő — Teljesítette a minimumkövetelményt'; b.className = 'cred-badge cb-ok'; b.style.display = '';
-    document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
+    document.getElementById('u-summ').innerHTML = actDetail(rec) + saveInfo(rec);
   } else {
     const missing = [];
     if (!rec.e) missing.push('kötelező adatszolgáltatás hiányzik');
     if (!rec.f) missing.push('kötelező publikáció hiányzik');
     if (tot < 10) missing.push(`még ${10 - tot} kredit hiányzik`);
     b.textContent = `✗ Nem megfelelő — ${missing.join(', ')}`; b.className = 'cred-badge cb-fail'; b.style.display = '';
-    document.getElementById('u-summ').innerHTML = actTable(rec) + saveInfo(rec);
+    document.getElementById('u-summ').innerHTML = actDetail(rec) + saveInfo(rec);
   }
 }
 
@@ -2225,6 +2225,116 @@ function actTable(r) {
 
 function saveInfo(r) {
   return `<div class="mt1" style="font-size:.75rem;color:var(--muted)">Utoljára mentve: ${fmtDate(r.updated)}</div>`;
+}
+
+function actDetail(r) {
+  const S  = (t) => `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:5px;margin:14px 0 8px">${t}</div>`;
+  const row = (lbl, val, cr, sub='') => `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #f4f4f4">
+      <div style="flex:1">
+        <div style="font-size:.875rem">${lbl}</div>
+        ${sub ? `<div style="font-size:.8rem;color:var(--muted);margin-top:2px">${sub}</div>` : ''}
+      </div>
+      <div style="text-align:right;white-space:nowrap;margin-left:12px">
+        <span style="font-size:.875rem">${val}</span>
+        ${cr ? `<span style="font-size:.78rem;color:var(--primary);font-weight:600;margin-left:6px">${cr} kr</span>` : ''}
+      </div>
+    </div>`;
+  const dlBtn = (url, name) => url
+    ? `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.75rem;background:#6c757d;color:#fff;padding:2px 8px;border-radius:4px;border:none;cursor:pointer;margin-top:3px">⬇ Letöltés</button>`
+    : '';
+  const linkEl = (url) => url
+    ? `<a href="${esc(url)}" target="_blank" rel="noopener" style="font-size:.75rem;color:var(--primary-l);word-break:break-all">🔗 ${esc(url)}</a>`
+    : '';
+  const wgList = (wgs) => (wgs||[]).map(w => `<div style="font-size:.82rem;padding:2px 0">${esc(w.name||'—')}</div>`).join('');
+  const wgListFile = (wgs) => (wgs||[]).map(w =>
+    `<div style="font-size:.82rem;padding:3px 0">${esc(w.name||'—')}${dlBtn(w.file_url, w.file_name||w.name||'fajl')}</div>`
+  ).join('');
+
+  let h = '';
+
+  // ── Kötelező előfeltételek ──
+  h += S('Kötelező előfeltételek');
+  h += row('Kötelező éves adatszolgáltatás', r.e ? '✓ Teljesítve' : '✗ Hiányzik', '');
+  if (r.f) {
+    const sub = [
+      r.f_title ? `<strong>${esc(r.f_title)}</strong>` : '',
+      r.f_link  ? linkEl(r.f_link) : '',
+      r.f_file_url ? dlBtn(r.f_file_url, r.f_file_name||'publikacio') : '',
+    ].filter(Boolean).join('<br>');
+    h += row('Kötelező publikáció', '✓ Teljesítve', '', sub);
+  } else {
+    h += row('Kötelező publikáció', '✗ Hiányzik', '');
+  }
+
+  // ── További publikációk ──
+  if ((r.g||0) > 0) {
+    h += S('További publikációk');
+    (r.g_pubs||[]).forEach((p,i) => {
+      const sub = [
+        p.title ? `<strong>${esc(p.title)}</strong>` : '',
+        p.link  ? linkEl(p.link) : '',
+        p.file_url ? dlBtn(p.file_url, p.file_name||p.title||'publikacio') : '',
+      ].filter(Boolean).join('<br>');
+      h += row(`Publikáció #${i+1}`, '', '2', sub);
+    });
+  }
+
+  // ── Részvétel és tisztségek ──
+  const hasReszt = (r.h||0) > 0 || r.i;
+  if (hasReszt) {
+    h += S('Részvétel és tisztségek');
+    if ((r.h||0) > 0) h += row('Közgyűlésen részvétel', `${r.h} alkalom`, r.h);
+    if (r.i) h += row('Tisztségviselői pozíció', esc(r.i_text||'—'), 4);
+  }
+
+  // ── Bizottságok és munkacsoportok ──
+  const hasBizMunk = (r.j||0)>0 || (r.k||0)>0 || (r.l||0)>0;
+  if (hasBizMunk) {
+    h += S('Bizottságok és munkacsoportok');
+    if ((r.j||0)>0) h += row(`Bizottsági tagság (${r.j} db)`, '', (r.j||0)*3, wgList(r.j_wgs));
+    if ((r.k||0)>0) h += row(`Munkacsoport részvétel (${r.k} db)`, '', (r.k||0)*2, wgList(r.k_wgs));
+    if ((r.l||0)>0) h += row(`Munkacsoport koordinálás (${r.l} db)`, '', (r.l||0)*3, wgList(r.l_wgs));
+  }
+
+  // ── SECUSzerda ──
+  const hasSecu = (r.n||0)>0 || (r.m||0)>0;
+  if (hasSecu) {
+    h += S('SECUSzerda');
+    if ((r.n||0)>0) h += row(`Részvétel`, `${r.n} alkalom`, Math.min(r.n||0,2));
+    if ((r.m||0)>0) h += row(`Téma vezető (${r.m} téma)`, '', r.m||0, wgList(r.m_wgs));
+  }
+
+  // ── Konferenciák ──
+  const hasKonf = r.o || r.p || (r.r||0)>0 || (r.q||0)>0;
+  if (hasKonf) {
+    h += S('Konferenciák');
+    if (r.o) h += row('MBF Konferencián részvétel', 'Igen', 2);
+    if (r.p) h += row('MBF Konferencián előadás / közreműk.', esc(r.p_text||'Igen'), 2);
+    if ((r.r||0)>0) h += row(`Más konf. részvétel (${r.r} alkalom)`, '', (r.r||0)*2, wgListFile(r.r_wgs));
+    if ((r.q||0)>0) h += row(`Más szakmai konf. előadás (${r.q} alkalom)`, '', (r.q||0)*3, wgList(r.q_wgs));
+  }
+
+  // ── Egyéb aktivitások ──
+  const hasEgyeb = (r.s||0)>0 || (r.t||0)>0;
+  if (hasEgyeb) {
+    h += S('Egyéb aktivitások');
+    if ((r.s||0)>0) {
+      const sDetail = (r.s_wgs||[]).map(w => `<div style="font-size:.82rem;padding:2px 0">${esc(w.name||'—')} <span style="color:var(--primary);font-weight:600">(${w.credits} kr)</span></div>`).join('');
+      h += row(`Egyéni vállalások`, '', r.s||0, sDetail);
+    }
+    if ((r.t||0)>0) h += row(`CSR tevékenység MBF nevében (${r.t} esemény)`, '', (r.t||0)*2, wgList(r.t_wgs));
+  }
+
+  // ── Összesítő ──
+  const tot = r.total || calcCredits(r);
+  h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:10px 12px;background:var(--bg);border-radius:8px;font-weight:700">
+    <span>Összesen</span><span style="color:var(--primary);font-size:1.1rem">${tot} kredit</span>
+  </div>`;
+
+  if (r.notes) h += `<div style="margin-top:10px;padding:9px 12px;background:#f8f9fa;border-radius:8px;font-size:.85rem"><strong>Megjegyzés:</strong> ${esc(r.notes)}</div>`;
+
+  return h || '<p style="color:var(--muted);font-size:.875rem">Nincs rögzített aktivitás.</p>';
 }
 
 // ═══════════════════════════════════════════════════════
