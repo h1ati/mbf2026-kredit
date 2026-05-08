@@ -1695,20 +1695,15 @@ async function renderUserPubs() {
   el.innerHTML = '<div class="loading-row">Betöltés...</div>';
   try {
     const actsSnap = await db.collection('activities').where('year','==',2026).get();
-    const hasRFile = a => a.r_wgs && a.r_wgs.some(w => w.name || w.file_url);
-    const acts = actsSnap.docs.map(d => d.data()).filter(a => a.f_title || (a.g_pubs && a.g_pubs.length) || hasRFile(a));
+    const acts = actsSnap.docs.map(d => d.data());
 
-    // fetch user docs by uid individually (avoids compound query + index requirement)
     const uids = [...new Set(acts.map(a => a.uid).filter(Boolean))];
     const userDocs = await Promise.all(uids.map(uid => db.collection('users').doc(uid).get()));
     const users = {};
     userDocs.forEach(d => { if (d.exists) users[d.id] = d.data(); });
 
     const rows = acts
-      .filter(a => {
-        const u = users[a.uid];
-        return u && (a.f_title || (a.g_pubs && a.g_pubs.length) || hasRFile(a));
-      })
+      .filter(a => users[a.uid])
       .sort((a,b) => {
         const na = (users[a.uid]?.last||'') + (users[a.uid]?.first||'');
         const nb = (users[b.uid]?.last||'') + (users[b.uid]?.first||'');
@@ -1716,47 +1711,61 @@ async function renderUserPubs() {
       });
 
     if (!rows.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-ico">📚</div><p>Még nincs feltöltött publikáció.</p></div>';
+      el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>Még nincs rögzített aktivitás.</p></div>';
       return;
     }
+
+    const fileBtn = (url, name, label) =>
+      `<button onclick="openFileModal('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 ${label||'Megnyitás'}</button>` +
+      `<a href="${esc(url)}" download="${esc(name)}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a>`;
+
+    const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
 
     el.innerHTML = rows.map(a => {
       const u    = users[a.uid];
       const name = u ? `${u.last} ${u.first}` : '—';
+      const total = a.total || 0;
+      const pass  = total >= 10 && a.e && a.f;
 
-      const kotelező = a.f_title ? `
-        <div style="margin-bottom:6px">
-          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Kötelező publikáció</div>
-          <div style="font-weight:600">${esc(a.f_title)}</div>
-          ${a.f_link ? `<div style="margin-top:4px"><a href="${esc(a.f_link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">🔗 ${esc(a.f_link)}</a></div>` : ''}
-          ${a.f_file_url ? `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button onclick="openFileModal('${esc(a.f_file_url)}','${esc(a.f_file_name||'publikacio')}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 Megnyitás</button><a href="${esc(a.f_file_url)}" download="${esc(a.f_file_name||'publikacio')}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a></div>` : ''}
-        </div>` : '';
+      let body = actTable(a);
 
-      const tovabbi = (a.g_pubs && a.g_pubs.length) ? `
-        <div>
-          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">További publikációk</div>
-          ${a.g_pubs.map((p,i) => `
-            <div style="padding:6px 0;${i>0?'border-top:1px solid #f0f0f0':''}">
-              <div style="font-weight:600">${p.title ? esc(p.title) : '<em style="color:var(--muted)">cím nélkül</em>'}</div>
-              ${p.link ? `<div style="margin-top:3px"><a href="${esc(p.link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">🔗 ${esc(p.link)}</a></div>` : ''}
-              ${p.file_url ? `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button onclick="openFileModal('${esc(p.file_url)}','${esc(p.file_name||'publikacio')}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 Megnyitás</button><a href="${esc(p.file_url)}" download="${esc(p.file_name||'publikacio')}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a></div>` : ''}
-            </div>`).join('')}
-        </div>` : '';
+      // Feltöltött fájlok szekció
+      const files = [];
+      if (a.f_file_url) files.push(`
+        ${secTitle('Kötelező publikáció – fájl')}
+        <div style="font-weight:600;margin-bottom:4px">${esc(a.f_title||'')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(a.f_file_url, a.f_file_name||'publikacio')}</div>`);
 
-      const konferencia = hasRFile(a) ? `
-        <div style="margin-top:${(kotelező||tovabbi)?'10px':'0'}">
-          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Más konferencián részvétel</div>
-          ${a.r_wgs.filter(w => w.name || w.file_url).map((w,i,arr) => `
-            <div style="padding:6px 0;${i>0?'border-top:1px solid #f0f0f0':''}">
-              ${w.name ? `<div style="font-weight:600">${esc(w.name)}</div>` : ''}
-              ${w.file_url ? `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button onclick="openFileModal('${esc(w.file_url)}','${esc(w.file_name||'jelentes')}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 Megnyitás</button><a href="${esc(w.file_url)}" download="${esc(w.file_name||'jelentes')}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a></div>` : ''}
-            </div>`).join('')}
-        </div>` : '';
+      if (a.g_pubs && a.g_pubs.some(p => p.file_url)) {
+        const pubFiles = a.g_pubs.filter(p => p.file_url).map(p => `
+          <div style="margin-bottom:6px">
+            ${p.title ? `<div style="font-weight:600;margin-bottom:4px">${esc(p.title)}</div>` : ''}
+            <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(p.file_url, p.file_name||'publikacio')}</div>
+          </div>`).join('');
+        files.push(secTitle('További publikációk – fájlok') + pubFiles);
+      }
 
+      if (a.r_wgs && a.r_wgs.some(w => w.file_url)) {
+        const rFiles = a.r_wgs.filter(w => w.file_url).map(w => `
+          <div style="margin-bottom:6px">
+            ${w.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(w.name)}</div>` : ''}
+            <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(w.file_url, w.file_name||'jelentes')}</div>
+          </div>`).join('');
+        files.push(secTitle('Más konferencián részvétel – fájlok') + rFiles);
+      }
+
+      if (files.length) {
+        body += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${files.join('')}</div>`;
+      }
+
+      const statusColor = pass ? 'var(--ok)' : total >= 10 ? 'var(--warn)' : 'var(--err)';
       return `
         <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
-          <div style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">${esc(name)}</div>
-          ${kotelező}${tovabbi}${konferencia}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">
+            <div style="font-size:1rem;font-weight:700;color:var(--primary)">${esc(name)}</div>
+            <div style="font-size:.85rem;font-weight:700;color:${statusColor}">${total} kredit</div>
+          </div>
+          ${body}
         </div>`;
     }).join('');
   } catch(e) {
