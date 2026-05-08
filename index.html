@@ -1457,7 +1457,7 @@ function aSection(s, el) {
 function calcCredits(a) {
   return ((a.g||0) * 2) + (a.h||0) + (a.i ? 4 : 0) + ((a.j||0) * 3) +
          ((a.k||0) * 2) + ((a.l||0) * 3) + ((a.m||0) * 1) + Math.min(a.n||0, 2) +
-         (a.o ? 2 : 0) + (a.p ? 2 : 0) + ((a.q||0) * 3) + ((a.r||0) * 2) +
+         (a.p ? 2 : (a.o ? 2 : 0)) + ((a.q||0) * 3) + ((a.r||0) * 2) +
          (a.s||0) + ((a.t||0) * 2);
 }
 
@@ -1916,7 +1916,7 @@ function updateSideBar(total, rec) {
 
 async function renderUserDash() {
   const rec = await getUserActivity(currentUser.id);
-  const tot = rec ? rec.total : 0;
+  const tot = rec ? calcCredits(rec) : 0;
   document.getElementById('u-big-num').textContent = tot;
   updateSideBar(tot, rec);
   const b = document.getElementById('u-big-badge');
@@ -1966,7 +1966,7 @@ function renderPubsRows(rows) {
   el.innerHTML = rows.map(a => {
     const u     = _pubsUsers[a.uid];
     const name  = u ? `${u.last} ${u.first}` : '—';
-    const total = a.total || 0;
+    const total = calcCredits(a);
     const pass  = total >= 10 && a.e && a.f;
     const statusColor = pass ? 'var(--ok)' : total>=10 ? 'var(--warn)' : 'var(--err)';
     return `<div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
@@ -2106,7 +2106,7 @@ async function renderAMembers() {
   let h = '<div class="tbl-wrap"><table><tr><th>Név</th><th>Email</th><th>Szervezet</th><th>Állapot</th><th>Kredit</th><th>Eredmény</th><th>Műveletek</th></tr>';
   users.forEach(u => {
     const rec = acts.find(a => a.uid === u.id);
-    const tot = rec ? rec.total : null;
+    const tot = rec ? calcCredits(rec) : null;
     const sb  = u.status==='pending' ? badge('Várakozik','b-warn')
               : u.status==='approved'? badge('Jóváhagyva','b-ok')
               :                        badge('Elutasítva','b-err');
@@ -2175,7 +2175,7 @@ async function renderAResults() {
   }
   const rows = users.map(u => {
     const rec = acts.find(a=>a.uid===u.id);
-    return { u, rec, tot: rec?rec.total:null, notes: rec?rec.notes:'' };
+    return { u, rec, tot: rec?calcCredits(rec):null, notes: rec?rec.notes:'' };
   }).sort((a,b) => {
     if (a.tot===null && b.tot===null) return 0;
     if (a.tot===null) return 1; if (b.tot===null) return -1;
@@ -2313,7 +2313,7 @@ async function downloadSummaryPdf(btn) {
     const rec = await getUserActivity(currentUser.id);
     if (!rec) throw new Error('Nincs rögzített aktivitás.');
     const name        = `${currentUser.last||''} ${currentUser.first||''}`.trim();
-    const total       = rec.total || calcCredits(rec);
+    const total       = calcCredits(rec);
     const pass        = isPass(rec);
     const statusColor = pass ? '#2e7d32' : '#c62828';
     const statusText  = pass ? 'Megfelelő ✓' : 'Nem megfelelő ✗';
@@ -2420,7 +2420,7 @@ async function openDetail(uid) {
     h += '<div class="alert alert-warn">Ez a tag még nem rögzített aktivitásokat.</div>';
   } else {
     h += `<div style="background:linear-gradient(135deg,var(--primary),var(--primary-l));color:#fff;border-radius:12px;padding:18px;text-align:center;margin-bottom:16px">
-      <div style="font-size:2.4rem;font-weight:700">${rec.total}</div>
+      <div style="font-size:2.4rem;font-weight:700">${calcCredits(rec)}</div>
       <div style="opacity:.75;font-size:.85rem">kredit pont</div>
       <div style="margin-top:8px;font-size:.95rem;font-weight:700">${isPass(rec)?'✓ MEGFELELT':'✗ NEM FELELT MEG'}</div></div>`;
     h += actTable(rec) + saveInfo(rec);
