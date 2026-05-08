@@ -2108,15 +2108,15 @@ async function downloadSummaryPdf(btn) {
       </div>`;
 
     const el = document.createElement('div');
-    el.style.position = 'absolute';
-    el.style.left = '-9999px';
+    el.style.cssText = 'position:fixed;top:-10000px;left:0;width:700px;background:#fff;z-index:-1';
     el.innerHTML = html;
     document.body.appendChild(el);
+    await new Promise(r => setTimeout(r, 100));
     await html2pdf().set({
       margin:      10,
       filename:    `mbf2026-aktivitas-${name.replace(/\s+/g,'-')}.pdf`,
       image:       { type:'jpeg', quality:0.97 },
-      html2canvas: { scale:2, useCORS:true, logging:false },
+      html2canvas: { scale:2, useCORS:true, logging:false, windowWidth:700 },
       jsPDF:       { unit:'mm', format:'a4', orientation:'portrait' }
     }).from(el).save();
     document.body.removeChild(el);
