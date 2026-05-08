@@ -1537,7 +1537,8 @@ async function renderUserPubs() {
         <div style="margin-bottom:6px">
           <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Kötelező publikáció</div>
           <div style="font-weight:600">${esc(a.f_title)}</div>
-          ${a.f_link ? `<a href="${esc(a.f_link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">${esc(a.f_link)}</a>` : ''}
+          ${a.f_link ? `<div style="margin-top:4px"><a href="${esc(a.f_link)}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--primary-l);word-break:break-all">🔗 ${esc(a.f_link)}</a></div>` : ''}
+          ${a.f_file_url ? `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><a href="${esc(a.f_file_url)}" target="_blank" rel="noopener" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">📄 Megnyitás</a><a href="${esc(a.f_file_url)}" download="${esc(a.f_file_name||'publikacio')}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a></div>` : ''}
         </div>` : '';
 
       const tovabbi = (a.g_pubs && a.g_pubs.length) ? `
