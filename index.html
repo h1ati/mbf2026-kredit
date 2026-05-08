@@ -1151,7 +1151,7 @@ function setPubFileInfo(url, name) {
     infoEl.classList.remove('dn');
     infoEl.innerHTML = `<div class="file-info">
       <span class="file-info-name">📄 ${esc(name || 'Feltöltött fájl')}</span>
-      <a href="${esc(url)}" target="_blank" rel="noopener">Megnyitás</a>
+      <button class="btn btn-sm" onclick="downloadFile('${esc(url)}','${esc(name||'fajl')}')" style="padding:4px 10px;background:#6c757d;color:#fff;border:none;cursor:pointer">⬇ Letöltés</button>
       <button class="btn btn-err btn-sm" onclick="deletePubFile()" style="padding:4px 10px">× Törlés</button>
     </div>`;
   } else {
@@ -1226,7 +1226,7 @@ function addPub(data = {}) {
   const fileHtml = fileUrl
     ? `<div class="file-info" id="${id}-finfo">
         <span class="file-info-name">📄 ${esc(fileName||'Feltöltött fájl')}</span>
-        <a href="${esc(fileUrl)}" target="_blank" rel="noopener">Megnyitás</a>
+        <button class="btn btn-sm" onclick="downloadFile('${esc(fileUrl)}','${esc(fileName||'fajl')}')" style="padding:4px 10px;background:#6c757d;color:#fff;border:none;cursor:pointer">⬇ Letöltés</button>
         <button class="btn btn-err btn-sm" onclick="deletePubCardFile('${id}')" style="padding:4px 10px">× Törlés</button>
        </div>`
     : '';
@@ -1299,7 +1299,7 @@ function setPubCardFileInfo(cardId, url, name) {
     infoEl.classList.remove('dn');
     infoEl.innerHTML = `<div class="file-info">
       <span class="file-info-name">📄 ${esc(name||'Feltöltött fájl')}</span>
-      <a href="${esc(url)}" target="_blank" rel="noopener">Megnyitás</a>
+      <button class="btn btn-sm" onclick="downloadFile('${esc(url)}','${esc(name||'fajl')}')" style="padding:4px 10px;background:#6c757d;color:#fff;border:none;cursor:pointer">⬇ Letöltés</button>
       <button class="btn btn-err btn-sm" onclick="deletePubCardFile('${cardId}')" style="padding:4px 10px">× Törlés</button>
     </div>`;
   } else {
@@ -1360,7 +1360,7 @@ function addWg(type, data = {}) {
             <div style="font-size:.75rem;color:var(--muted);margin-top:4px">PDF, Word, Excel, PowerPoint, kép</div>
           </div>
         </div>
-        <div id="${id}-finfo" class="${fileUrl ? '' : 'dn'}">${fileUrl ? `<div class="file-info"><span class="file-info-name">📄 ${esc(fileName||'Feltöltött fájl')}</span><a href="${esc(fileUrl)}" target="_blank" rel="noopener">Megnyitás</a><button class="btn btn-err btn-sm" onclick="deletePubCardFile('${id}')" style="padding:4px 10px">× Törlés</button></div>` : ''}</div>
+        <div id="${id}-finfo" class="${fileUrl ? '' : 'dn'}">${fileUrl ? `<div class="file-info"><span class="file-info-name">📄 ${esc(fileName||'Feltöltött fájl')}</span><button class="btn btn-sm" onclick="downloadFile('${esc(fileUrl)}','${esc(fileName||'fajl')}')" style="padding:4px 10px;background:#6c757d;color:#fff;border:none;cursor:pointer">⬇ Letöltés</button><button class="btn btn-err btn-sm" onclick="deletePubCardFile('${id}')" style="padding:4px 10px">× Törlés</button></div>` : ''}</div>
         <div id="${id}-falert" style="margin-top:6px"></div>
       </div>` : '';
   document.getElementById(type + '-wgs').insertAdjacentHTML('beforeend', `
@@ -1715,8 +1715,7 @@ async function renderUserPubs() {
       return;
     }
 
-    const fileBtn = (url, name, label) =>
-      `<button onclick="openFileModal('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">📄 ${label||'Megnyitás'}</button>` +
+    const fileBtn = (url, name) =>
       `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">⬇ Letöltés</button>`;
 
     const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
