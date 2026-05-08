@@ -689,6 +689,11 @@ service cloud.firestore {
     <div id="us-pubs" class="dn">
       <div class="card">
         <div class="card-title">Tagi aktivitások és publikációk</div>
+        <div style="margin-bottom:14px">
+          <select id="pubs-filter" onchange="filterUserPubs()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:#fff">
+            <option value="all">Összes tag</option>
+          </select>
+        </div>
         <div id="u-pubs-list"><div class="loading-row">Betöltés...</div></div>
       </div>
     </div>
@@ -1701,6 +1706,51 @@ async function renderUserHist() {
   }
 }
 
+let _pubsRows  = [];
+let _pubsUsers = {};
+
+function filterUserPubs() {
+  const uid = document.getElementById('pubs-filter').value;
+  const filtered = uid === 'all' ? _pubsRows : _pubsRows.filter(a => a.uid === uid);
+  renderPubsRows(filtered);
+}
+
+function renderPubsRows(rows) {
+  const el = document.getElementById('u-pubs-list');
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>Nincs rögzített aktivitás.</p></div>';
+    return;
+  }
+  const fileBtn = (url, name) =>
+    `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">⬇ Letöltés</button>`;
+  const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
+
+  el.innerHTML = rows.map(a => {
+    const u     = _pubsUsers[a.uid];
+    const name  = u ? `${u.last} ${u.first}` : '—';
+    const total = a.total || 0;
+    const pass  = total >= 10 && a.e && a.f;
+    let body = actTable(a);
+    const files = [];
+    if (a.f_file_url) files.push(`${secTitle('Kötelező publikáció – fájl')}<div style="font-weight:600;margin-bottom:4px">${esc(a.f_title||'')}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(a.f_file_url, a.f_file_name||'publikacio')}</div>`);
+    if (a.g_pubs && a.g_pubs.some(p => p.file_url)) {
+      const pf = a.g_pubs.filter(p=>p.file_url).map(p=>`<div style="margin-bottom:6px">${p.title?`<div style="font-weight:600;margin-bottom:4px">${esc(p.title)}</div>`:''}<div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(p.file_url,p.file_name||p.title||'publikacio')}</div></div>`).join('');
+      files.push(secTitle('További publikációk – fájlok') + pf);
+    }
+    if (a.r_wgs && a.r_wgs.some(w=>w.file_url)) {
+      const rf = a.r_wgs.filter(w=>w.file_url).map(w=>`<div style="margin-bottom:6px">${w.name?`<div style="font-weight:600;margin-bottom:4px">${esc(w.name)}</div>`:''}<div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(w.file_url,w.file_name||w.name||'jelentes')}</div></div>`).join('');
+      files.push(secTitle('Más konferencián részvétel – fájlok') + rf);
+    }
+    if (files.length) body += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${files.join('')}</div>`;
+    const statusColor = pass ? 'var(--ok)' : total>=10 ? 'var(--warn)' : 'var(--err)';
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">
+        <div style="font-size:1rem;font-weight:700;color:var(--primary)">${esc(name)}</div>
+        <div style="font-size:.85rem;font-weight:700;color:${statusColor}">${total} kredit</div>
+      </div>${body}</div>`;
+  }).join('');
+}
+
 async function renderUserPubs() {
   const el = document.getElementById('u-pubs-list');
   el.innerHTML = '<div class="loading-row">Betöltés...</div>';
@@ -1710,76 +1760,33 @@ async function renderUserPubs() {
 
     const uids = [...new Set(acts.map(a => a.uid).filter(Boolean))];
     const userDocs = await Promise.all(uids.map(uid => db.collection('users').doc(uid).get()));
-    const users = {};
-    userDocs.forEach(d => { if (d.exists) users[d.id] = d.data(); });
+    _pubsUsers = {};
+    userDocs.forEach(d => { if (d.exists) _pubsUsers[d.id] = d.data(); });
 
-    const rows = acts
-      .filter(a => users[a.uid])
+    _pubsRows = acts
+      .filter(a => _pubsUsers[a.uid])
       .sort((a,b) => {
-        const na = (users[a.uid]?.last||'') + (users[a.uid]?.first||'');
-        const nb = (users[b.uid]?.last||'') + (users[b.uid]?.first||'');
+        const na = (_pubsUsers[a.uid]?.last||'') + (_pubsUsers[a.uid]?.first||'');
+        const nb = (_pubsUsers[b.uid]?.last||'') + (_pubsUsers[b.uid]?.first||'');
         return na.localeCompare(nb, 'hu');
       });
 
-    if (!rows.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>Még nincs rögzített aktivitás.</p></div>';
-      return;
-    }
-
-    const fileBtn = (url, name) =>
-      `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">⬇ Letöltés</button>`;
-
-    const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
-
-    el.innerHTML = rows.map(a => {
-      const u    = users[a.uid];
-      const name = u ? `${u.last} ${u.first}` : '—';
-      const total = a.total || 0;
-      const pass  = total >= 10 && a.e && a.f;
-
-      let body = actTable(a);
-
-      // Feltöltött fájlok szekció
-      const files = [];
-      if (a.f_file_url) files.push(`
-        ${secTitle('Kötelező publikáció – fájl')}
-        <div style="font-weight:600;margin-bottom:4px">${esc(a.f_title||'')}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(a.f_file_url, a.f_file_name||'publikacio')}</div>`);
-
-      if (a.g_pubs && a.g_pubs.some(p => p.file_url)) {
-        const pubFiles = a.g_pubs.filter(p => p.file_url).map(p => `
-          <div style="margin-bottom:6px">
-            ${p.title ? `<div style="font-weight:600;margin-bottom:4px">${esc(p.title)}</div>` : ''}
-            <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(p.file_url, p.file_name||'publikacio')}</div>
-          </div>`).join('');
-        files.push(secTitle('További publikációk – fájlok') + pubFiles);
+    // Legördülő feltöltése
+    const sel = document.getElementById('pubs-filter');
+    sel.innerHTML = '<option value="all">Összes tag</option>';
+    _pubsRows.forEach(a => {
+      const u = _pubsUsers[a.uid];
+      if (u) {
+        const opt = document.createElement('option');
+        opt.value = a.uid;
+        opt.textContent = `${u.last} ${u.first}`;
+        sel.appendChild(opt);
       }
+    });
 
-      if (a.r_wgs && a.r_wgs.some(w => w.file_url)) {
-        const rFiles = a.r_wgs.filter(w => w.file_url).map(w => `
-          <div style="margin-bottom:6px">
-            ${w.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(w.name)}</div>` : ''}
-            <div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(w.file_url, w.file_name||'jelentes')}</div>
-          </div>`).join('');
-        files.push(secTitle('Más konferencián részvétel – fájlok') + rFiles);
-      }
-
-      if (files.length) {
-        body += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${files.join('')}</div>`;
-      }
-
-      const statusColor = pass ? 'var(--ok)' : total >= 10 ? 'var(--warn)' : 'var(--err)';
-      return `
-        <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">
-            <div style="font-size:1rem;font-weight:700;color:var(--primary)">${esc(name)}</div>
-            <div style="font-size:.85rem;font-weight:700;color:${statusColor}">${total} kredit</div>
-          </div>
-          ${body}
-        </div>`;
-    }).join('');
+    renderPubsRows(_pubsRows);
   } catch(e) {
-    el.innerHTML = '<div class="alert alert-err">Betöltési hiba: ' + e.message + '</div>';
+    document.getElementById('u-pubs-list').innerHTML = '<div class="alert alert-err">Betöltési hiba: ' + e.message + '</div>';
   }
 }
 
