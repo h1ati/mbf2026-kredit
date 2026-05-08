@@ -1184,7 +1184,6 @@ function addWg(type, data = {}) {
     </div>
   `);
   updateWgCount(type);
-  if (type === 'm') syncReszvételToTema();
 }
 
 function syncReszvételToTema() {
@@ -1337,6 +1336,7 @@ async function saveActs() {
   setBtn('save-btn', true, 'Mentés...');
   try {
     pruneEmpty();
+    syncReszvételToTema();
     const form = getForm();
 
     form.g_pubs.forEach(pub => delete pub._id);
