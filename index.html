@@ -613,19 +613,19 @@ service cloud.firestore {
           <div id="ap-text-row" style="display:none;margin-top:6px">
             <input type="text" id="ap-text" placeholder="Közreműködés megnevezése" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.875rem" oninput="liveCalc()">
           </div>
-          <div class="act-lbl" style="margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
-          <div id="q-wgs"></div>
-          <button class="btn btn-ghost btn-sm" onclick="addWg('q')" style="margin-top:6px">+ Konferencia / előadás megadása <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
-          <div class="g-counter">
-            <span style="color:var(--muted)">Előadások száma → kredit:</span>
-            <span><span id="q-count">0</span> db × 3 = <strong id="q-cred" style="color:var(--primary)">0</strong> kredit</span>
-          </div>
           <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">Más konferencián részvétel (jelentéssel) <span class="act-pts">2 kredit / alkalom</span></div>
           <div id="r-wgs"></div>
           <button class="btn btn-ghost btn-sm" onclick="addWg('r')" style="margin-top:6px">+ Konferencia megnevezése <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
           <div class="g-counter">
             <span style="color:var(--muted)">Részvételek száma → kredit:</span>
             <span><span id="r-count">0</span> db × 2 = <strong id="r-cred" style="color:var(--primary)">0</strong> kredit</span>
+          </div>
+          <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">Más szakmai konferencián előadás <span class="act-pts">3 kredit / előadás</span></div>
+          <div id="q-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('q')" style="margin-top:6px">+ Konferencia / előadás megadása <span style="color:var(--muted);font-size:.8rem">(3 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Előadások száma → kredit:</span>
+            <span><span id="q-count">0</span> db × 3 = <strong id="q-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
