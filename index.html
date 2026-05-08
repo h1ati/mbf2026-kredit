@@ -631,10 +631,12 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">Egyéb aktivitások</div>
-          <div class="act-row">
-            <div><div class="act-lbl">Egyéni vállalások</div><div class="act-pts">1–2 kredit / vállalás — add meg a szerzett kreditpontok összegét</div></div>
-            <input type="number" class="num-in" id="as" min="0" max="40" value="0" onchange="liveCalc()">
-            <textarea id="as-names" rows="2" style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em;resize:vertical;" placeholder="Itt nevezheted meg az egyéni vállalásaidat..."></textarea>
+          <div class="act-lbl" style="margin-bottom:6px">Egyéni vállalások <span class="act-pts">1–2 kredit / vállalás</span></div>
+          <div id="s-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addSWg()" style="margin-top:6px">+ Egyéni vállalás hozzáadása</button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Egyéni vállalások → kredit:</span>
+            <span><span id="s-count">0</span> db = <strong id="s-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
           <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">CSR tevékenység MBF nevében <span class="act-pts">2 kredit / esemény</span></div>
           <div id="t-wgs"></div>
@@ -1327,6 +1329,7 @@ function updateGCount() {
 }
 
 let wgCounter = 0;
+let sCounter  = 0;
 const WG_CFG = {
   j: { credits: 3, label: 'Bizottság',   placeholder: 'Bizottság megnevezése' },
   k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
@@ -1369,6 +1372,56 @@ function addWg(type, data = {}) {
     </div>
   `);
   updateWgCount(type);
+}
+
+function addSWg(data = {}) {
+  sCounter++;
+  const id = 'swg_' + sCounter;
+  const n  = document.querySelectorAll('#s-wgs .pub-card').length + 1;
+  document.getElementById('s-wgs').insertAdjacentHTML('beforeend', `
+    <div class="pub-card" id="${id}">
+      <div class="pub-card-head">
+        <span class="pub-card-title">Vállalás #${n}</span>
+        <button class="btn btn-err btn-sm" onclick="removeSWg('${id}')">× Törlés</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
+        <input type="text" class="wg-name" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:.9em" placeholder="Vállalás megnevezése" value="${esc(data.name||'')}">
+        <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+          <label style="font-size:.85rem;color:var(--muted)">Kredit:</label>
+          <input type="number" class="s-credits num-in" min="1" max="2" value="${data.credits||1}" style="width:62px" onchange="updateSCount()">
+        </div>
+      </div>
+    </div>
+  `);
+  updateSCount();
+}
+
+function removeSWg(id) {
+  document.getElementById(id).remove();
+  document.querySelectorAll('#s-wgs .pub-card .pub-card-title').forEach((el,i) => {
+    el.textContent = 'Vállalás #' + (i + 1);
+  });
+  updateSCount();
+}
+
+function updateSCount() {
+  const cards = document.querySelectorAll('#s-wgs .pub-card');
+  let total = 0;
+  cards.forEach(card => { total += parseInt(card.querySelector('.s-credits')?.value || 0); });
+  document.getElementById('s-count').textContent = cards.length;
+  document.getElementById('s-cred').textContent  = total;
+  liveCalc();
+}
+
+function getSWgs() {
+  const result = [];
+  document.querySelectorAll('#s-wgs .pub-card').forEach(card => {
+    result.push({
+      name:    card.querySelector('.wg-name')?.value.trim() || '',
+      credits: parseInt(card.querySelector('.s-credits')?.value || 1)
+    });
+  });
+  return result;
 }
 
 function syncReszvételToTema() {
@@ -1442,7 +1495,7 @@ function getForm() {
     j: getWgs('j').length, j_wgs: getWgs('j'),
     k: getWgs('k').length, k_wgs: getWgs('k'), l: getWgs('l').length, l_wgs: getWgs('l'), m: getWgs('m').length, m_wgs: getWgs('m'), n: num('an'),
     o: chk('ao'), p: chk('ap'), p_text: document.getElementById('ap-text').value.trim(), q: getWgs('q').length, q_wgs: getWgs('q'), r: getWgs('r').length, r_wgs: getWgs('r'),
-    s: num('as'), s_names: v('as-names'), t: getWgs('t').length, t_wgs: getWgs('t'),
+    s_wgs: getSWgs(), s: getSWgs().reduce((a,w) => a+(w.credits||0), 0), t: getWgs('t').length, t_wgs: getWgs('t'),
     notes: v('a-notes')
   };
 }
@@ -1484,7 +1537,11 @@ async function loadActForm() {
     document.getElementById('ap-text-row').style.display = rec.p ? 'block' : 'none';
     (rec.q_wgs || Array(rec.q||0).fill({})).forEach(w => addWg('q', w));
     (rec.r_wgs || Array(rec.r||0).fill({})).forEach(w => addWg('r', w));
-    setNum('as',rec.s); document.getElementById('as-names').value = rec.s_names || '';
+    if (rec.s_wgs && rec.s_wgs.length) {
+      rec.s_wgs.forEach(w => addSWg(w));
+    } else if ((rec.s||0) > 0) {
+      addSWg({ name: rec.s_names || '', credits: Math.min(rec.s, 2) });
+    }
     (rec.t_wgs || Array(rec.t||0).fill({})).forEach(w => addWg('t', w));
     document.getElementById('a-notes').value = rec.notes || '';
   } else {
@@ -1499,14 +1556,15 @@ function resetForm() {
   document.getElementById('ap-text').value = '';
   document.getElementById('ap-text-row').style.display = 'none';
   document.getElementById('ai-text').value = '';
-  ['ah','an','as'].forEach(id => setNum(id, 0));
+  ['ah','an'].forEach(id => setNum(id, 0));
+  document.getElementById('s-wgs').innerHTML = '';
   document.getElementById('af-title').value = '';
   document.getElementById('af-link').value  = '';
   setPubFileInfo('', '');
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   ['j','k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
-  document.getElementById('as-names').value = '';
+  updateSCount();
   document.getElementById('a-notes').value = '';
   updateGCount();
   liveCalc();
@@ -1526,6 +1584,13 @@ function pruneEmpty() {
     document.getElementById(type + '-count').textContent = n;
     document.getElementById(type + '-cred').textContent  = n * cfg.credits;
   });
+  document.querySelectorAll('#s-wgs .pub-card').forEach(card => {
+    if (!card.querySelector('.wg-name')?.value.trim()) card.remove();
+  });
+  document.querySelectorAll('#s-wgs .pub-card .pub-card-title').forEach((el,i) => {
+    el.textContent = 'Vállalás #' + (i + 1);
+  });
+  updateSCount();
   document.querySelectorAll('#g-pubs .pub-card').forEach(card => {
     const title = card.querySelector('.pub-title')?.value.trim();
     const link  = card.querySelector('.pub-link')?.value.trim();
