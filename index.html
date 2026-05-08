@@ -1993,12 +1993,26 @@ async function downloadSummaryPdf(btn) {
     const pass  = isPass(rec);
 
     // Feltöltött fájlok linkjei
-    const fajlok = [];
-    if (rec.f_file_url) fajlok.push(`<li>Kötelező publikáció${rec.f_title ? ' – ' + esc(rec.f_title) : ''}: <a href="${esc(rec.f_file_url)}">${esc(rec.f_file_url)}</a></li>`);
-    (rec.g_pubs||[]).filter(p=>p.file_url).forEach(p => fajlok.push(`<li>További publikáció${p.title?' – '+esc(p.title):''}: <a href="${esc(p.file_url)}">${esc(p.file_url)}</a></li>`));
-    (rec.r_wgs||[]).filter(w=>w.file_url).forEach(w => fajlok.push(`<li>Konferencia részvétel${w.name?' – '+esc(w.name):''}: <a href="${esc(w.file_url)}">${esc(w.file_url)}</a></li>`));
-    const fajlokHtml = fajlok.length
-      ? `<h3 style="margin:18px 0 6px;font-size:13px;color:#333">Feltöltött fájlok</h3><ul style="font-size:11px;line-height:1.8;padding-left:18px">${fajlok.join('')}</ul>`
+    const linkek = [];
+    // Kötelező publikáció
+    if (rec.f_title || rec.f_link || rec.f_file_url) {
+      const cim = rec.f_title ? esc(rec.f_title) : 'Kötelező publikáció';
+      if (rec.f_link)     linkek.push(`<li>${cim} – weboldal: <a href="${esc(rec.f_link)}">${esc(rec.f_link)}</a></li>`);
+      if (rec.f_file_url) linkek.push(`<li>${cim} – fájl: <a href="${esc(rec.f_file_url)}">${esc(rec.f_file_url)}</a></li>`);
+    }
+    // További publikációk
+    (rec.g_pubs||[]).forEach(p => {
+      const cim = p.title ? esc(p.title) : 'További publikáció';
+      if (p.link)     linkek.push(`<li>${cim} – weboldal: <a href="${esc(p.link)}">${esc(p.link)}</a></li>`);
+      if (p.file_url) linkek.push(`<li>${cim} – fájl: <a href="${esc(p.file_url)}">${esc(p.file_url)}</a></li>`);
+    });
+    // Más konferencián részvétel
+    (rec.r_wgs||[]).forEach(w => {
+      const cim = w.name ? esc(w.name) : 'Konferencia részvétel';
+      if (w.file_url) linkek.push(`<li>${cim} – fájl: <a href="${esc(w.file_url)}">${esc(w.file_url)}</a></li>`);
+    });
+    const fajlokHtml = linkek.length
+      ? `<h3 style="margin:18px 0 6px;font-size:13px;color:#333">Weboldal linkek és feltöltött fájlok</h3><ul style="font-size:11px;line-height:1.8;padding-left:18px">${linkek.join('')}</ul>`
       : '';
 
     const statusColor = pass ? '#2e7d32' : '#c62828';
