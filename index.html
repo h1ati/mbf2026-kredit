@@ -2012,9 +2012,8 @@ function actTable(r) {
         if (r.g_pubs && r.g_pubs.length) {
           r.g_pubs.forEach(p => {
             d += `<div style="font-size:.78rem;margin-top:4px;padding:3px 8px;background:#f0f4f8;border-radius:5px">`;
-            if (p.title) d += `<strong>${esc(p.title)}</strong> `;
-            if (p.link)     d += `<a href="${esc(p.link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
-            if (p.file_url) d += `<a href="${esc(p.file_url)}" target="_blank" class="pub-link-disp">📎 ${esc(p.file_name||'Fájl')}</a>`;
+            if (p.title) d += `<strong>${esc(p.title)}</strong>`;
+            if (p.link)  d += ` <a href="${esc(p.link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
             d += '</div>';
           });
         }
