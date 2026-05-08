@@ -933,6 +933,9 @@ service cloud.firestore {
         <li class="nav-item"><div class="nav-lnk" onclick="aSection('cfg',this)"><span class="nav-ico">⚙️</span> Beállítások</div></li>
       </ul>
     </div>
+    <div class="card" style="padding:12px 14px;margin-top:0">
+      <div id="admin-side-updated" style="font-size:.7rem;color:var(--muted)"></div>
+    </div>
   </div>
 
   <div>
@@ -2021,6 +2024,8 @@ async function renderAdmin() {
   const snap = await db.collection('users').where('status','==','pending').get();
   const n = snap.size;
   document.getElementById('pend-cnt').textContent = n > 0 ? n : '';
+  const d = new Date(document.lastModified);
+  document.getElementById('admin-side-updated').textContent = 'Utolsó frissítés: ' + d.toLocaleString('hu-HU', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
 
 async function renderAOverview() {
