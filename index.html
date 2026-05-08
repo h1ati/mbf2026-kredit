@@ -1765,9 +1765,11 @@ function liveCalc() {
 
 async function loadActForm() {
   const rec = await getUserActivity(currentUser.id);
-  // Clear pub state
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
+  document.getElementById('s-wgs').innerHTML = '';
+  sCounter = 0;
+  ['j','k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
 
   if (rec) {
     setChk('ae',rec.e);
