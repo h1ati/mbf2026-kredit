@@ -208,6 +208,8 @@ small{font-size:.8rem;color:var(--muted)}
 .info-icon .info-tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a2332;color:#fff;font-size:.78rem;font-weight:400;line-height:1.4;padding:8px 12px;border-radius:8px;white-space:normal;width:260px;z-index:999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .info-icon .info-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1a2332}
 .info-icon:hover .info-tip{display:block}
+.info-icon .info-tip.tip-left{left:auto;right:0;transform:none}
+.info-icon .info-tip.tip-left::after{left:auto;right:10px;transform:none}
 @media print{
   body>*:not(#pdf-print-overlay){display:none!important}
   #pdf-print-overlay{display:block!important;position:static!important;overflow:visible!important}
@@ -2127,7 +2129,7 @@ async function renderAMembers() {
         ${u.status!=='approved'
           ? `<button class="btn btn-ok btn-sm" style="margin-left:4px" onclick="approveUser('${u.id}')">Jóváhagy</button>`
           : ''}
-        <button class="btn btn-err btn-sm" style="margin-left:4px" onclick="deleteUser('${u.id}','${esc(u.last)} ${esc(u.first)}')">🗑 Tag törlése</button>
+        <button class="btn btn-err btn-sm" style="margin-left:4px" onclick="deleteUser('${u.id}','${esc(u.last)} ${esc(u.first)}')">🗑 Tag törlése</button><span class="info-icon">i<span class="info-tip tip-left" style="width:300px">A gomb törli a Firestore adatokat, de a bejelentkezési fiókot a Firebase Console-on kell törölni:<br><br>1. console.firebase.google.com<br>2. Projekt: mbf-kreditrendszer-2026<br>3. Authentication → Users<br>4. Email cím megkeresése<br>5. ⋮ → Delete account</span></span>
       </td></tr>`;
   });
   el.innerHTML = h + '</table></div>';
