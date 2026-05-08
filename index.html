@@ -1911,7 +1911,10 @@ function updateSideBar(total, rec) {
   document.getElementById('side-badge').innerHTML =
     pass ? badge('✓ Megfelelő','b-ok') : badge('✗ Nem megfelelő','b-err');
   const updEl = document.getElementById('side-updated');
-  if (updEl) updEl.textContent = rec && rec.updated ? 'Utolsó mentés: ' + fmtDate(rec.updated) : '';
+  if (updEl) {
+    const d = new Date(document.lastModified);
+    updEl.textContent = 'Utolsó frissítés: ' + d.toLocaleString('hu-HU', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
 }
 
 async function renderUserDash() {
