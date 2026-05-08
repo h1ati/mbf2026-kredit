@@ -537,7 +537,7 @@ service cloud.firestore {
         <div class="card-title">Aktivitások összesítése</div>
         <div id="u-summ"><div class="loading-row">Betöltés...</div></div>
         <div style="margin-top:14px">
-          <button class="btn btn-ghost" onclick="downloadSummaryPdf(this)" style="font-size:.875rem">📄 Aktivitásaim letöltése PDF-ben</button>
+          <button class="btn btn-ghost" onclick="downloadSummaryPdf(this)" style="font-size:.875rem">🖨️ Aktivitásaim nyomtatása / letöltése</button>
           <div id="summary-pdf-alert" style="margin-top:8px"></div>
         </div>
       </div>
@@ -859,8 +859,8 @@ service cloud.firestore {
         <h2 id="utm-osszesito">6. Saját összesítőm</h2>
         <p>Az összes rögzített aktivitás részletesen jelenik meg a kredit pontszámmal, megfelelőségi státusszal, fájl letöltési linkekkel és weboldal linkekkel.</p>
         <h3>6.1 PDF letöltése</h3>
-        <div class="utm-step"><div class="utm-step-num">1</div><div class="utm-step-txt">Kattints a <strong>„📄 Aktivitásaim letöltése PDF-ben"</strong> gombra.</div></div>
-        <div class="utm-step"><div class="utm-step-num">2</div><div class="utm-step-txt">A megnyíló előnézeti ablakban kattints a <strong>„🖨️ Nyomtatás / PDF mentés"</strong> gombra.</div></div>
+        <div class="utm-step"><div class="utm-step-num">1</div><div class="utm-step-txt">Kattints a <strong>„🖨️ Aktivitásaim nyomtatása / letöltése"</strong> gombra.</div></div>
+        <div class="utm-step"><div class="utm-step-num">2</div><div class="utm-step-txt">Automatikusan megnyílik a böngésző nyomtatási dialógusa.</div></div>
         <div class="utm-step"><div class="utm-step-num">3</div><div class="utm-step-txt">A nyomtatási ablakban válaszd a <strong>„Mentés PDF-ként"</strong> lehetőséget, majd kattints a „Mentés" gombra.</div></div>
 
         <h2 id="utm-tagi">7. Tagi aktivitások és publikációk</h2>
@@ -2313,31 +2313,24 @@ async function downloadSummaryPdf(btn) {
     bar.className = 'pdf-modal-bar';
     bar.innerHTML = '<span style="flex:1;font-weight:700;font-size:.95rem">Aktivitásaim előnézete</span>';
 
-    const doPrintBtn = document.createElement('button');
-    doPrintBtn.className = 'btn btn-ok btn-sm';
-    doPrintBtn.textContent = '🖨️ Nyomtatás / PDF mentés';
-    doPrintBtn.addEventListener('click', () => {
-      window.addEventListener('afterprint', closeOverlay, { once: true });
-      window.print();
-    });
-
     const closeBtn = document.createElement('button');
     closeBtn.className = 'btn btn-ghost btn-sm';
     closeBtn.style.cssText = 'border-color:rgba(255,255,255,.4);color:#fff';
     closeBtn.textContent = '✕ Bezárás';
     closeBtn.addEventListener('click', closeOverlay);
 
-    bar.appendChild(doPrintBtn);
     bar.appendChild(closeBtn);
 
     overlay.innerHTML = content;
     overlay.prepend(bar);
     overlay.classList.add('show');
+    window.addEventListener('afterprint', closeOverlay, { once: true });
+    window.print();
   } catch(e) {
     alertEl.innerHTML = errHtml('PDF hiba: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📄 Aktivitásaim letöltése PDF-ben';
+    btn.textContent = '🖨️ Aktivitásaim nyomtatása / letöltése';
   }
 }
 
