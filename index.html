@@ -210,9 +210,10 @@ small{font-size:.8rem;color:var(--muted)}
 .info-icon:hover .info-tip{display:block}
 @media print{
   body>*:not(#pdf-print-overlay){display:none!important}
-  #pdf-print-overlay{display:block!important;position:static!important}
+  #pdf-print-overlay{display:block!important}
   @page{margin:15mm}
 }
+#pdf-print-overlay{display:none}
 </style>
 </head>
 <body>
@@ -2078,22 +2079,24 @@ async function downloadSummaryPdf(btn) {
   try {
     const rec = await getUserActivity(currentUser.id);
     if (!rec) throw new Error('Nincs rögzített aktivitás.');
-    const name  = `${currentUser.last || ''} ${currentUser.first || ''}`.trim();
-    const total = rec.total || calcCredits(rec);
-    const pass  = isPass(rec);
+    const name        = `${currentUser.last||''} ${currentUser.first||''}`.trim();
+    const total       = rec.total || calcCredits(rec);
+    const pass        = isPass(rec);
     const statusColor = pass ? '#2e7d32' : '#c62828';
     const statusText  = pass ? 'Megfelelő ✓' : 'Nem megfelelő ✗';
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;width:680px;padding:24px;color:#222">
-        <div style="border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px">
-          <div style="font-size:18px;font-weight:700;color:#1a3a5c">MBF Kredit Nyilvántartó — 2026</div>
-          <div style="font-size:12px;color:#555;margin-top:3px">Aktivitás összefoglaló</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    let overlay = document.getElementById('pdf-print-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'pdf-print-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#222;max-width:750px;margin:0 auto;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px">
           <div>
-            <div style="font-size:14px;font-weight:700">${esc(name)}</div>
-            <div style="font-size:11px;color:#666;margin-top:2px">${esc(currentUser.email||'')}</div>
+            <div style="font-size:18px;font-weight:700;color:#1a3a5c">MBF Kredit Nyilvántartó — 2026</div>
+            <div style="font-size:12px;color:#555;margin-top:3px">${esc(name)} — ${esc(currentUser.email||'')}</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:26px;font-weight:700;color:#1a3a5c">${total}</div>
@@ -2102,41 +2105,12 @@ async function downloadSummaryPdf(btn) {
           </div>
         </div>
         ${actDetailPdf(rec)}
-        <div style="margin-top:18px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:14px;padding:8px 10px;background:#f4f6f9;border-radius:6px">
+          <span>Összesen</span><span style="color:#1a3a5c">${total} kredit</span>
+        </div>
+        <div style="margin-top:16px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
       </div>`;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'pdf-print-overlay';
-    overlay.style.cssText = 'display:none;font-family:Arial,sans-serif;font-size:12px;color:#222;padding:24px;max-width:750px;margin:0 auto';
-    overlay.innerHTML = `
-      <style>
-        #pdf-print-overlay .sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#666;background:#f4f6f9;padding:4px 8px;border-radius:4px;margin:14px 0 6px}
-        #pdf-print-overlay .row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #e0e0e0}
-        #pdf-print-overlay .row-lbl{flex:1;font-size:12px}
-        #pdf-print-overlay .row-val{text-align:right;white-space:nowrap;margin-left:12px;font-size:12px}
-        #pdf-print-overlay .row-cr{font-size:11px;color:#1a3a5c;font-weight:700;margin-left:6px}
-        #pdf-print-overlay .sub-row{font-size:10px;color:#555;margin-top:3px}
-        #pdf-print-overlay a{color:#1565c0;word-break:break-all}
-        #pdf-print-overlay .notes{margin-top:10px;padding:8px 10px;background:#f4f6f9;border-radius:6px;font-size:11px}
-      </style>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px">
-        <div>
-          <div style="font-size:18px;font-weight:700;color:#1a3a5c">MBF Kredit Nyilvántartó — 2026</div>
-          <div style="font-size:12px;color:#555;margin-top:3px">${esc(name)} &lt;${esc(currentUser.email||'')}&gt;</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:28px;font-weight:700;color:#1a3a5c">${total}</div>
-          <div style="font-size:10px;color:#666">kredit pont</div>
-          <div style="font-size:11px;font-weight:700;color:${statusColor};margin-top:2px">${statusText}</div>
-        </div>
-      </div>
-      ${actDetailPdf(rec)}
-      <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:14px;padding:8px 10px;background:#f4f6f9;border-radius:6px">
-        <span>Összesen</span><span style="font-size:15px;color:#1a3a5c">${total} kredit</span>
-      </div>
-      <div style="margin-top:18px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>`;
-    document.body.appendChild(overlay);
-    window.addEventListener('afterprint', () => overlay.remove(), { once: true });
+    window.addEventListener('afterprint', () => { overlay.innerHTML = ''; }, { once: true });
     window.print();
   } catch(e) {
     alertEl.innerHTML = errHtml('PDF hiba: ' + e.message);
