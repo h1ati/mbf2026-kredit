@@ -1184,6 +1184,15 @@ function addWg(type, data = {}) {
     </div>
   `);
   updateWgCount(type);
+  if (type === 'm') syncReszvételToTema();
+}
+
+function syncReszvételToTema() {
+  const temaCount = document.querySelectorAll('#m-wgs .pub-card').length;
+  const required  = Math.min(temaCount, 2);
+  const anEl      = document.getElementById('an');
+  if (parseInt(anEl.value) < required) anEl.value = required;
+  liveCalc();
 }
 
 function removeWg(id, type) {
