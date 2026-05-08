@@ -509,6 +509,10 @@ service cloud.firestore {
             </div>
             <div style="margin-top:10px;padding-left:2px">
               <div class="fg">
+                <label style="font-size:.8rem;font-weight:600">Publikáció címe</label>
+                <input type="text" id="af-title" placeholder="A publikáció címe...">
+              </div>
+              <div class="fg">
                 <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
                 <input type="url" id="af-link" placeholder="https://...">
               </div>
@@ -1219,6 +1223,7 @@ function getForm() {
   return {
     e: chk('ae'),
     f: chk('af'),
+    f_title: document.getElementById('af-title').value.trim(),
     f_link: document.getElementById('af-link').value.trim(),
     g: gPubs.length,
     g_pubs: gPubs,
@@ -1250,7 +1255,8 @@ async function loadActForm() {
 
   if (rec) {
     setChk('ae',rec.e); setChk('af',rec.f);
-    document.getElementById('af-link').value = rec.f_link || '';
+    document.getElementById('af-title').value = rec.f_title || '';
+    document.getElementById('af-link').value  = rec.f_link  || '';
     // G pubs
     (rec.g_pubs || []).forEach(p => addPub(p));
     setNum('ah',rec.h); setChk('ai',rec.i); setNum('aj',rec.j);
@@ -1274,7 +1280,8 @@ async function loadActForm() {
 function resetForm() {
   ['ae','af','ai','ao','ap'].forEach(id => setChk(id, false));
   ['ah','aj','an','as'].forEach(id => setNum(id, 0));
-  document.getElementById('af-link').value = '';
+  document.getElementById('af-title').value = '';
+  document.getElementById('af-link').value  = '';
   document.getElementById('g-pubs').innerHTML = '';
   pubCounter = 0;
   ['k','l','m','q','r','t'].forEach(x => { document.getElementById(x + '-wgs').innerHTML = ''; });
