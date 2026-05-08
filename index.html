@@ -1981,23 +1981,16 @@ async function rejectUser(uid) {
 }
 
 function actDetailPdf(r) {
-  const PRI = '#1a3a5c', MUT = '#666', BOR = '#e0e0e0', BG = '#f4f6f9';
-  const S = t => `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${MUT};background:${BG};padding:4px 8px;border-radius:4px;margin:14px 0 6px">${t}</div>`;
+  const S = t => `<div class="sec">${t}</div>`;
   const row = (lbl, val, cr, sub='') => `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid ${BOR}">
-      <div style="flex:1">
-        <div style="font-size:12px">${lbl}</div>
-        ${sub ? `<div style="font-size:10px;color:${MUT};margin-top:2px">${sub}</div>` : ''}
-      </div>
-      <div style="text-align:right;white-space:nowrap;margin-left:12px">
-        ${val ? `<span style="font-size:12px">${val}</span>` : ''}
-        ${cr  ? `<span style="font-size:11px;color:${PRI};font-weight:700;margin-left:6px">${cr} kr</span>` : ''}
-      </div>
+    <div class="row">
+      <div class="row-lbl">${lbl}${sub ? `<div class="sub-row">${sub}</div>` : ''}</div>
+      <div class="row-val">${val||''}${cr ? `<span class="row-cr">${cr} kr</span>` : ''}</div>
     </div>`;
-  const link = (url, label) => url ? `<a href="${esc(url)}" style="color:#1565c0;font-size:10px;word-break:break-all">${label ? esc(label) : esc(url)}</a>` : '';
-  const wgLines = wgs => (wgs||[]).map(w => `<div style="font-size:10px">${esc(w.name||'—')}</div>`).join('');
+  const link = (url, label) => url ? `<a href="${esc(url)}">${label ? esc(label) : esc(url)}</a>` : '';
+  const wgLines = wgs => (wgs||[]).map(w => `<div>${esc(w.name||'—')}</div>`).join('');
   const wgLinesFile = wgs => (wgs||[]).map(w =>
-    `<div style="font-size:10px">${esc(w.name||'—')}${w.file_url ? '<br>' + link(w.file_url, 'Fájl letöltése') : ''}</div>`
+    `<div>${esc(w.name||'—')}${w.file_url ? '<br>' + link(w.file_url, 'Letöltési link') : ''}</div>`
   ).join('');
 
   let h = '';
@@ -2067,7 +2060,7 @@ function actDetailPdf(r) {
   }
 
   // Megjegyzés
-  if (r.notes) h += `<div style="margin-top:10px;padding:8px 10px;background:${BG};border-radius:6px;font-size:11px"><strong>Megjegyzés:</strong> ${esc(r.notes)}</div>`;
+  if (r.notes) h += `<div class="notes"><strong>Megjegyzés:</strong> ${esc(r.notes)}</div>`;
 
   return h;
 }
@@ -2107,19 +2100,48 @@ async function downloadSummaryPdf(btn) {
         <div style="margin-top:18px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
       </div>`;
 
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;top:-10000px;left:0;width:700px;background:#fff;z-index:-1';
-    el.innerHTML = html;
-    document.body.appendChild(el);
-    await new Promise(r => setTimeout(r, 100));
-    await html2pdf().set({
-      margin:      10,
-      filename:    `mbf2026-aktivitas-${name.replace(/\s+/g,'-')}.pdf`,
-      image:       { type:'jpeg', quality:0.97 },
-      html2canvas: { scale:2, useCORS:true, logging:false, windowWidth:700 },
-      jsPDF:       { unit:'mm', format:'a4', orientation:'portrait' }
-    }).from(el).save();
-    document.body.removeChild(el);
+    const printWin = window.open('', '_blank');
+    printWin.document.write(`<!DOCTYPE html><html><head>
+      <meta charset="utf-8">
+      <title>MBF 2026 – ${esc(name)}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:24px;max-width:750px;margin:0 auto}
+        h1{font-size:18px;font-weight:700;color:#1a3a5c;margin-bottom:3px}
+        .sub{font-size:12px;color:#555;margin-bottom:16px}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px}
+        .total-num{font-size:28px;font-weight:700;color:#1a3a5c;text-align:right}
+        .sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#666;background:#f4f6f9;padding:4px 8px;border-radius:4px;margin:14px 0 6px}
+        .row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #e0e0e0}
+        .row-lbl{flex:1;font-size:12px}
+        .row-val{text-align:right;white-space:nowrap;margin-left:12px;font-size:12px}
+        .row-cr{font-size:11px;color:#1a3a5c;font-weight:700;margin-left:6px}
+        .sub-row{font-size:10px;color:#555;margin-top:3px}
+        .total-row{display:flex;justify-content:space-between;font-weight:700;margin-top:14px;padding:8px 10px;background:#f4f6f9;border-radius:6px}
+        .total-cr{font-size:15px;color:#1a3a5c}
+        a{color:#1565c0;word-break:break-all}
+        .notes{margin-top:10px;padding:8px 10px;background:#f4f6f9;border-radius:6px;font-size:11px}
+        .footer{margin-top:18px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999}
+        @media print{body{padding:0} @page{margin:15mm}}
+      </style>
+    </head><body>
+      <div class="header">
+        <div>
+          <h1>MBF Kredit Nyilvántartó — 2026</h1>
+          <div class="sub">Aktivitás összefoglaló — ${esc(name)} &lt;${esc(currentUser.email||'')}&gt;</div>
+        </div>
+        <div>
+          <div class="total-num">${total}</div>
+          <div style="font-size:10px;color:#666;text-align:right">kredit pont</div>
+          <div style="font-size:11px;font-weight:700;color:${statusColor};text-align:right;margin-top:2px">${statusText}</div>
+        </div>
+      </div>
+      ${actDetailPdf(rec)}
+      <div class="total-row"><span>Összesen</span><span class="total-cr">${total} kredit</span></div>
+      <div class="footer">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
+      <script>window.onload=function(){window.print()}<\/script>
+    </body></html>`);
+    printWin.document.close();
   } catch(e) {
     alertEl.innerHTML = errHtml('PDF hiba: ' + e.message);
   } finally {
@@ -2127,6 +2149,7 @@ async function downloadSummaryPdf(btn) {
     btn.textContent = '📄 Aktivitásaim letöltése PDF-ben';
   }
 }
+
 
 async function sendStatusNotification(user, status) {
   const ejs = LS.get('mbf26_ejs');
