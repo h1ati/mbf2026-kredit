@@ -385,6 +385,18 @@ service cloud.firestore {
       <input type="password" id="lin-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn btn-p btn-lg" id="login-btn" onclick="doLogin()">Bejelentkezés</button>
+    <p class="tc mt2" style="font-size:.8rem"><a href="#" onclick="showPwReset();return false;" style="color:var(--primary-l)">Elfelejtettem a jelszavamat</a></p>
+  </div>
+
+  <!-- Password reset -->
+  <div id="tab-pwreset" class="dn">
+    <div id="pwreset-alert"></div>
+    <p style="font-size:.875rem;color:var(--muted);margin-bottom:14px">Add meg a regisztrációkor használt email címedet, és küldünk egy jelszó-visszaállítási linket.</p>
+    <div class="fg"><label>Email cím</label>
+      <input type="email" id="pwr-email" placeholder="pelda@email.hu" onkeydown="if(event.key==='Enter')doPwReset()">
+    </div>
+    <button class="btn btn-p btn-lg" id="pwr-btn" onclick="doPwReset()">Link küldése</button>
+    <p class="tc mt2" style="font-size:.8rem"><a href="#" onclick="hidePwReset();return false;" style="color:var(--muted)">← Vissza a bejelentkezéshez</a></p>
   </div>
 
   <!-- Register -->
@@ -985,6 +997,35 @@ async function doRegister() {
   } catch(e) {
     al.innerHTML = errHtml(fbErr(e));
     setBtn('reg-btn', false, 'Regisztráció');
+  }
+}
+
+function showPwReset() {
+  document.getElementById('tab-login').classList.add('dn');
+  document.getElementById('tab-reg').classList.add('dn');
+  document.getElementById('tab-pwreset').classList.remove('dn');
+  document.getElementById('pwreset-alert').innerHTML = '';
+  const loginEmail = document.getElementById('lin-email').value.trim();
+  if (loginEmail) document.getElementById('pwr-email').value = loginEmail;
+}
+
+function hidePwReset() {
+  document.getElementById('tab-pwreset').classList.add('dn');
+  document.getElementById('tab-login').classList.remove('dn');
+}
+
+async function doPwReset() {
+  const email = document.getElementById('pwr-email').value.trim();
+  const al    = document.getElementById('pwreset-alert');
+  if (!email) { al.innerHTML = errHtml('Kérjük, add meg az email címedet!'); return; }
+  setBtn('pwr-btn', true, 'Küldés...');
+  try {
+    await auth.sendPasswordResetEmail(email);
+    al.innerHTML = '<div class="alert alert-ok">✓ Jelszó-visszaállítási link elküldve! Ellenőrizd az email fiókodat (spam mappát is).</div>';
+  } catch(e) {
+    al.innerHTML = errHtml(fbErr(e));
+  } finally {
+    setBtn('pwr-btn', false, 'Link küldése');
   }
 }
 
