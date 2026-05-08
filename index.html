@@ -1270,7 +1270,7 @@ async function loadActForm() {
     (rec.k_wgs || Array(rec.k||0).fill({})).forEach(w => addWg('k', w));
     (rec.l_wgs || Array(rec.l||0).fill({})).forEach(w => addWg('l', w));
     (rec.m_wgs || Array(rec.m||0).fill({})).forEach(w => addWg('m', w));
-    setNum('am',rec.m); setNum('an',rec.n);
+    setNum('an',rec.n);
     setChk('ao',rec.o); setChk('ap',rec.p);
     (rec.q_wgs || Array(rec.q||0).fill({})).forEach(w => addWg('q', w));
     (rec.r_wgs || Array(rec.r||0).fill({})).forEach(w => addWg('r', w));
