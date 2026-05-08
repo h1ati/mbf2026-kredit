@@ -476,6 +476,7 @@ service cloud.firestore {
         <li class="nav-item"><div class="nav-lnk on" id="unl-dash" onclick="uSection('dash',this)"><span class="nav-ico">📊</span> Saját összesítőm</div></li>
         <li class="nav-item"><div class="nav-lnk" id="unl-act" onclick="uSection('act',this)"><span class="nav-ico">✏️</span> Aktivitások rögzítése</div></li>
         <li class="nav-item"><div class="nav-lnk" id="unl-pubs" onclick="uSection('pubs',this)"><span class="nav-ico">📚</span> Tagi aktivitások és publikációk</div></li>
+        <li class="nav-item"><div class="nav-lnk" id="unl-guide" onclick="uSection('guide',this)"><span class="nav-ico">📖</span> Felhasználói útmutató</div></li>
       </ul>
     </div>
     <div class="card side-credits">
@@ -695,6 +696,12 @@ service cloud.firestore {
           </select>
         </div>
         <div id="u-pubs-list"><div class="loading-row">Betöltés...</div></div>
+      </div>
+    </div>
+
+    <div id="us-guide" class="dn">
+      <div class="card" style="padding:0;overflow:hidden">
+        <iframe src="utmutato.html" style="width:100%;height:80vh;border:none;display:block"></iframe>
       </div>
     </div>
   </div>
@@ -1193,7 +1200,7 @@ function showPg(p) {
 }
 
 function uSection(s, el) {
-  ['dash','act','hist','pubs'].forEach(x => {
+  ['dash','act','hist','pubs','guide'].forEach(x => {
     document.getElementById('us-' + x).classList.toggle('dn', x !== s);
     const navEl = document.getElementById('unl-' + x);
     if (navEl) navEl.classList.toggle('on', x === s);
@@ -2101,8 +2108,25 @@ async function downloadSummaryPdf(btn) {
         </div>
         <div style="margin-top:16px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
       </div>`;
-    window.addEventListener('afterprint', () => { overlay.innerHTML = ''; }, { once: true });
-    window.print();
+    alertEl.innerHTML = '';
+    const alertBox = document.createElement('div');
+    alertBox.className = 'alert alert-ok';
+    alertBox.style.cssText = 'display:flex;align-items:center;gap:10px';
+    const msg = document.createElement('span');
+    msg.textContent = 'Aktivitások betöltve — kattints a nyomtatáshoz:';
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn btn-p btn-sm';
+    printBtn.textContent = '🖨️ Nyomtatás / PDF mentés';
+    printBtn.addEventListener('click', function() {
+      window.addEventListener('afterprint', () => {
+        overlay.innerHTML = '';
+        alertEl.innerHTML = '';
+      }, { once: true });
+      window.print();
+    });
+    alertBox.appendChild(msg);
+    alertBox.appendChild(printBtn);
+    alertEl.appendChild(alertBox);
   } catch(e) {
     alertEl.innerHTML = errHtml('PDF hiba: ' + e.message);
   } finally {

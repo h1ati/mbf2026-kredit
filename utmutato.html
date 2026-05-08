@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<title>MBF 2026 Kredit Nyilvántartó – Felhasználói útmutató</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:12pt;color:#222;line-height:1.6;background:#fff}
+  .page{max-width:800px;margin:0 auto;padding:40px 48px}
+
+  h1{font-size:22pt;font-weight:700;color:#1a3a5c;margin-bottom:6px}
+  h2{font-size:15pt;font-weight:700;color:#1a3a5c;margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid #c8d8e8}
+  h3{font-size:12pt;font-weight:700;color:#1a3a5c;margin:18px 0 6px}
+  h4{font-size:11pt;font-weight:700;color:#2c5282;margin:12px 0 4px}
+  p{margin-bottom:8px}
+  ul,ol{margin:6px 0 10px 22px}
+  li{margin-bottom:4px}
+
+  .cover{text-align:center;padding:60px 0 40px}
+  .cover h1{font-size:26pt;margin-bottom:10px}
+  .cover .sub{font-size:13pt;color:#555;margin-bottom:6px}
+  .cover .ver{font-size:10pt;color:#888;margin-top:20px}
+  .cover hr{border:none;border-top:3px solid #1a3a5c;margin:24px auto;width:120px}
+
+  .toc{background:#f4f7fb;border-radius:8px;padding:20px 28px;margin:24px 0}
+  .toc h2{margin-top:0;border:none;font-size:13pt}
+  .toc ol{margin-left:18px}
+  .toc li{margin-bottom:3px;font-size:11pt}
+  .toc a{color:#1a3a5c;text-decoration:none}
+
+  .info-box{background:#e8f0fb;border-left:4px solid #1a3a5c;border-radius:4px;padding:10px 14px;margin:12px 0;font-size:11pt}
+  .warn-box{background:#fff8e1;border-left:4px solid #f59e0b;border-radius:4px;padding:10px 14px;margin:12px 0;font-size:11pt}
+  .ok-box{background:#e8f5e9;border-left:4px solid #2e7d32;border-radius:4px;padding:10px 14px;margin:12px 0;font-size:11pt}
+
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11pt}
+  th{background:#1a3a5c;color:#fff;padding:8px 10px;text-align:left;font-size:10.5pt}
+  td{padding:7px 10px;border-bottom:1px solid #dde3ea}
+  tr:nth-child(even) td{background:#f4f7fb}
+  .cr{font-weight:700;color:#1a3a5c;text-align:center}
+
+  .step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+  .step-num{background:#1a3a5c;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:10pt;font-weight:700;flex-shrink:0;margin-top:1px}
+  .step-txt{flex:1}
+
+  .section-badge{display:inline-block;background:#1a3a5c;color:#fff;font-size:9pt;font-weight:700;padding:2px 8px;border-radius:4px;margin-right:6px;vertical-align:middle}
+
+  .footer-note{font-size:9pt;color:#888;margin-top:32px;padding-top:10px;border-top:1px solid #ddd;text-align:center}
+
+  @media print{
+    body{font-size:11pt}
+    .page{padding:20px 28px;max-width:100%}
+    h2{page-break-before:auto}
+    .no-break{page-break-inside:avoid}
+    @page{margin:18mm 16mm}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- BORÍTÓ -->
+<div class="cover no-break">
+  <h1>MBF 2026 Kredit Nyilvántartó</h1>
+  <div class="sub">Felhasználói útmutató</div>
+  <hr>
+  <p style="font-size:11pt;color:#555">Magyar Biztonsági Fórum Egyesület<br>Kredit alapú aktivitásnyilvántartó rendszer — 2026-os év</p>
+  <div class="ver">Verzió: 2026 | Utoljára frissítve: 2025. május</div>
+</div>
+
+<!-- TARTALOMJEGYZÉK -->
+<div class="toc no-break">
+  <h2>Tartalomjegyzék</h2>
+  <ol>
+    <li><a href="#bevezetes">Bevezetés — Mi ez a rendszer?</a></li>
+    <li><a href="#regisztracio">Regisztráció és bejelentkezés</a></li>
+    <li><a href="#felhasznaloi-felulet">A felhasználói felület áttekintése</a></li>
+    <li><a href="#aktivitasok">Aktivitások rögzítése</a></li>
+    <li><a href="#kredit-tabla">Kredit értékek táblázata</a></li>
+    <li><a href="#osszesito">Saját összesítőm</a></li>
+    <li><a href="#tagi-aktivitasok">Tagi aktivitások és publikációk</a></li>
+    <li><a href="#admin">Adminisztrátori funkciók</a></li>
+    <li><a href="#gyik">Gyakori kérdések</a></li>
+  </ol>
+</div>
+
+<!-- 1. BEVEZETÉS -->
+<h2 id="bevezetes">1. Bevezetés — Mi ez a rendszer?</h2>
+<p>Az <strong>MBF 2026 Kredit Nyilvántartó</strong> egy online platform, amely lehetővé teszi az MBF tagok számára, hogy a 2026-os évre vonatkozó szakmai aktivitásaikat rögzítsék, kredit pontjaikat nyomon kövessék, és az összefoglalót PDF formátumban letöltsék.</p>
+
+<h3>Minimum követelmény</h3>
+<div class="ok-box">
+  A tagság fenntartásához <strong>minimum 10 kredit pont</strong> szükséges a 2026-os évben, <strong>ÉS</strong> teljesíteni kell két kötelező előfeltételt:
+  <ul style="margin-top:6px">
+    <li>✓ Kötelező éves adatszolgáltatás</li>
+    <li>✓ Kötelező publikáció (a cím megadásával)</li>
+  </ul>
+</div>
+
+<div class="info-box">
+  A rendszer automatikusan kiszámolja a kredit pontokat minden mentéskor. A rendszer jelzi, ha a minimum követelmény teljesült vagy hiányzik.
+</div>
+
+<!-- 2. REGISZTRÁCIÓ -->
+<h2 id="regisztracio">2. Regisztráció és bejelentkezés</h2>
+
+<h3>2.1 Regisztráció</h3>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Nyisd meg a rendszert, és kattints a <strong>„Regisztráció"</strong> gombra a bejelentkezési képernyőn.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">Töltsd ki az összes mezőt: <strong>Vezetéknév, Keresztnév, Szervezet neve, Email cím, Jelszó</strong>.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-txt">Kattints a <strong>„Regisztráció"</strong> gombra.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-txt">A regisztrációs kérelem elküldése után <strong>adminisztrátori jóváhagyás szükséges</strong>. Amíg a jóváhagyás nem történik meg, a rendszerbe nem lehet bejelentkezni.</div></div>
+<div class="step"><div class="step-num">5</div><div class="step-txt">Jóváhagyás vagy elutasítás esetén <strong>email értesítő</strong> érkezik a megadott email címre.</div></div>
+</div>
+
+<h3>2.2 Bejelentkezés</h3>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Add meg a regisztrációkor használt <strong>email címet és jelszót</strong>.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">Kattints a <strong>„Bejelentkezés"</strong> gombra.</div></div>
+</div>
+
+<h3>2.3 Elfelejtett jelszó</h3>
+<p>Ha elfelejtetted a jelszavadat, a bejelentkezési képernyőn kattints az <strong>„Elfelejtettem a jelszavamat"</strong> linkre. Add meg a regisztrált email címedet, és a rendszer jelszó-visszaállítási emailt küld.</p>
+
+<!-- 3. FELHASZNÁLÓI FELÜLET -->
+<h2 id="felhasznaloi-felulet">3. A felhasználói felület áttekintése</h2>
+
+<p>Sikeres bejelentkezés után a bal oldali navigációs sávban három fő menüpont érhető el:</p>
+
+<table class="no-break">
+  <tr><th>Menüpont</th><th>Leírás</th></tr>
+  <tr><td>📊 <strong>Saját összesítőm</strong></td><td>Az összes rögzített aktivitás részletes összefoglalója és a kredit pontszám megjelenítése. PDF letöltési lehetőség.</td></tr>
+  <tr><td>✏️ <strong>Aktivitások rögzítése</strong></td><td>Az éves aktivitások bevitele és mentése.</td></tr>
+  <tr><td>📚 <strong>Tagi aktivitások és publikációk</strong></td><td>Minden tag aktivitásának megtekintése (csak olvasható nézet).</td></tr>
+</table>
+
+<div class="info-box">
+  A jobb felső sarokban látható a bejelentkezett felhasználó neve és egy <strong>„Kijelentkezés"</strong> gomb.
+</div>
+
+<!-- 4. AKTIVITÁSOK RÖGZÍTÉSE -->
+<h2 id="aktivitasok">4. Aktivitások rögzítése</h2>
+
+<p>Az <strong>„Aktivitások rögzítése"</strong> menüponton az éves aktivitások adhatók meg. Az oldal tetején és alján egyaránt megtalálható a <strong>💾 Mentés</strong> gomb. Az aktuálisan számított kredit összeg folyamatosan frissül a jobb alsó sarokban lévő előnézeti mezőben.</p>
+
+<div class="warn-box">
+  <strong>Fontos:</strong> Az adatok csak a <strong>„Mentés"</strong> gombra kattintás után kerülnek tárolásra. Oldal elhagyásakor a nem mentett módosítások elvesznek.
+</div>
+
+<h3>4.1 Kötelező előfeltételek</h3>
+
+<h4>Kötelező éves adatszolgáltatás</h4>
+<p>Jelöld be a pipát, ha teljesítetted az éves adatszolgáltatási kötelezettséget. Ez <strong>kötelező előfeltétel</strong>, de kredit pontot nem ér.</p>
+
+<h4>Kötelező publikáció</h4>
+<p>Add meg a kötelező éves publikáció adatait:</p>
+<ul>
+  <li><strong>Publikáció címe</strong> — kötelező mező, ennek kitöltése igazolja a teljesítést</li>
+  <li><strong>Publikáció részletei</strong> — statikus tájékoztató szöveg a részletekről</li>
+  <li><strong>Fájl feltöltése</strong> (opcionális) — a publikáció dokumentumának feltöltése</li>
+  <li><strong>Weboldal link</strong> (opcionális) — a publikáció online elérhetősége</li>
+</ul>
+<div class="warn-box">A kötelező publikáció <strong>nem ér kredit pontot</strong>, de a minimum követelmény teljesítéséhez szükséges.</div>
+
+<h3>4.2 További publikációk</h3>
+<p>Az évi <strong>2 kredit / publikáció</strong> értékű további publikációk rögzítése kártyaalapú rendszerrel történik.</p>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Kattints a <strong>„+ További publikáció hozzáadása (2 kredit)"</strong> gombra.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">Töltsd ki a <strong>Publikáció címe</strong> mezőt.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-txt">Opcionálisan tölts fel fájlt vagy adj meg weboldal linket.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-txt">Több publikáció esetén ismételd meg a fenti lépéseket.</div></div>
+</div>
+
+<h3>4.3 Részvétel és tisztségek</h3>
+
+<h4>Közgyűlésen részvétel</h4>
+<p>Add meg a közgyűléseken való részvételek számát. Értéke: <strong>1 kredit / alkalom</strong>.</p>
+
+<h4>Tisztségviselői pozíció</h4>
+<p>Ha betöltesz elnöki, titkári vagy bizottsági elnöki pozíciót, add meg a <strong>tisztség pontos megnevezését</strong> a szövegmezőben. Értéke: <strong>4 kredit</strong> (ha van betöltött tisztség).</p>
+
+<h4>Bizottsági tagságok</h4>
+<p>Minden egyes bizottsági tagságot kártyával rögzíts a <strong>„+ Bizottsági tagság hozzáadása (3 kredit)"</strong> gombbal. Add meg a bizottság megnevezését. Értéke: <strong>3 kredit / bizottság</strong>.</p>
+
+<h3>4.4 Munkacsoportok</h3>
+
+<h4>Munkacsoport részvétel</h4>
+<p>Minden egyes munkacsoport részvételt a <strong>„+ Munkacsoport részvétel hozzáadása (2 kredit)"</strong> gombbal rögzíts. Add meg a munkacsoport megnevezését. Értéke: <strong>2 kredit / munkacsoport</strong>.</p>
+
+<h4>Munkacsoport koordinálás</h4>
+<p>Ha koordinátori szerepet töltöttél be, a <strong>„+ Munkacsoport koordinálás hozzáadása (3 kredit)"</strong> gombbal rögzíts. Értéke: <strong>3 kredit / munkacsoport</strong>.</p>
+
+<h3>4.5 SECUSzerda</h3>
+
+<h4>SECUSzerda rendezvényen részvétel</h4>
+<p>Add meg a SECUSzerda rendezvényeken való részvételek számát. Értéke: <strong>1 kredit / alkalom, maximum 2 kredit / év</strong>.</p>
+<div class="info-box">Ha SECUSzerda témát veszel fel, a rendszer automatikusan ellenőrzi és beállítja a részvételi értéket mentéskor.</div>
+
+<h4>SECUSzerda téma vezető</h4>
+<p>Minden egyes témavezetést a <strong>„+ SECUSzerda téma hozzáadása (1 kredit)"</strong> gombbal rögzíts. Add meg a téma megnevezését. Értéke: <strong>1 kredit / téma</strong>.</p>
+
+<h3>4.6 Konferenciák</h3>
+
+<h4>MBF Konferencián részvétel</h4>
+<p>Jelöld be a pipát, ha részt vettél az MBF konferencián. Értéke: <strong>2 kredit</strong>.</p>
+
+<h4>MBF Konferencián előadás vagy közreműködés a lebonyolításban</h4>
+<p>Jelöld be a pipát, ha előadóként vagy a lebonyolításban közreműködőként (műsorvezető, pódium-beszélgetés, technikai csapat) vettél részt. A pipa bejelölése után add meg a <strong>közreműködés megnevezését</strong>.</p>
+<div class="info-box">Ha ezt a mezőt jelölöd be, a rendszer automatikusan bejelöli az „MBF Konferencián részvétel" mezőt is. Értéke: <strong>2 kredit</strong>.</div>
+
+<h4>Más konferencián részvétel (jelentéssel)</h4>
+<p>Más szakmai konferencián való részvételt a <strong>„+ Konferencia megnevezése (2 kredit)"</strong> gombbal rögzíts. Add meg a konferencia nevét, és töltsd fel a részvételi jelentés fájlját. Értéke: <strong>2 kredit / alkalom</strong>.</p>
+
+<h4>Más szakmai konferencián előadás</h4>
+<p>Más konferencián tartott előadásokat a <strong>„+ Konferencia / előadás megadása (3 kredit)"</strong> gombbal rögzíts. Add meg a konferencia és az előadás nevét. Értéke: <strong>3 kredit / előadás</strong>.</p>
+
+<h3>4.7 Egyéb aktivitások</h3>
+
+<h4>Egyéni vállalások</h4>
+<p>Az egyénileg vállalt aktivitásokat a <strong>„+ Egyéni vállalás hozzáadása"</strong> gombbal rögzíts. Minden vállaláshoz add meg:</p>
+<ul>
+  <li><strong>Vállalás megnevezése</strong> — a tevékenység leírása</li>
+  <li><strong>Kredit érték</strong> — 1 vagy 2 kredit (maximum 2 kredit / vállalás)</li>
+</ul>
+
+<h4>CSR tevékenység MBF nevében</h4>
+<p>A társadalmi felelősségvállalási tevékenységeket a <strong>„+ Tevékenység megnevezése (2 kredit)"</strong> gombbal rögzíts. Értéke: <strong>2 kredit / esemény</strong>.</p>
+
+<h3>4.8 Megjegyzés</h3>
+<p>Az oldal alján szabadon szöveges megjegyzést is rögzíthetsz az aktivitásokhoz.</p>
+
+<h3>4.9 Fájlok feltöltése</h3>
+<p>A kötelező publikációhoz, további publikációkhoz és konferencia részvételekhez fájlt is feltölthetsz. Elfogadott fájltípusok: <strong>PDF, Word, Excel, PowerPoint, képfájlok</strong>. A feltöltés Cloudinary tárhelyre történik.</p>
+<div class="warn-box">A feltöltött fájlok fizikai törlése nem lehetséges — a törlés gomb csak a hivatkozást távolítja el a rendszerből. A fájl Cloudinary-n megmarad.</div>
+
+<!-- 5. KREDIT TÁBLÁZAT -->
+<h2 id="kredit-tabla">5. Kredit értékek táblázata</h2>
+
+<table>
+  <tr><th>Aktivitás</th><th>Kredit érték</th><th>Megjegyzés</th></tr>
+  <tr><td>Kötelező éves adatszolgáltatás</td><td class="cr">—</td><td>Kötelező előfeltétel, nem pontoz</td></tr>
+  <tr><td>Kötelező publikáció</td><td class="cr">—</td><td>Kötelező előfeltétel, nem pontoz</td></tr>
+  <tr><td>További publikáció</td><td class="cr">2 kredit / db</td><td></td></tr>
+  <tr><td>Közgyűlésen részvétel</td><td class="cr">1 kredit / alkalom</td><td></td></tr>
+  <tr><td>Tisztségviselői pozíció</td><td class="cr">4 kredit</td><td>Elnök, titkár, bizottsági elnök</td></tr>
+  <tr><td>Bizottsági tagság</td><td class="cr">3 kredit / db</td><td></td></tr>
+  <tr><td>Munkacsoport részvétel</td><td class="cr">2 kredit / db</td><td></td></tr>
+  <tr><td>Munkacsoport koordinálás</td><td class="cr">3 kredit / db</td><td></td></tr>
+  <tr><td>SECUSzerda részvétel</td><td class="cr">1 kredit / alkalom</td><td>Maximum 2 kredit / év</td></tr>
+  <tr><td>SECUSzerda téma vezető</td><td class="cr">1 kredit / téma</td><td></td></tr>
+  <tr><td>MBF Konferencián részvétel</td><td class="cr">2 kredit</td><td></td></tr>
+  <tr><td>MBF Konf. előadás / közreműk.</td><td class="cr">2 kredit</td><td>Tartalmazza a részvételt is</td></tr>
+  <tr><td>Más konf. részvétel (jel.)</td><td class="cr">2 kredit / alkalom</td><td>Jelentés feltöltése szükséges</td></tr>
+  <tr><td>Más szakmai konf. előadás</td><td class="cr">3 kredit / előadás</td><td></td></tr>
+  <tr><td>Egyéni vállalás</td><td class="cr">1–2 kredit / db</td><td>Maximum 2 kredit / vállalás</td></tr>
+  <tr><td>CSR tevékenység MBF nevében</td><td class="cr">2 kredit / esemény</td><td></td></tr>
+</table>
+
+<!-- 6. SAJÁT ÖSSZESÍTŐM -->
+<h2 id="osszesito">6. Saját összesítőm</h2>
+
+<p>A <strong>„Saját összesítőm"</strong> oldalon az összes rögzített aktivitás részletesen jelenik meg az alábbi információkkal:</p>
+<ul>
+  <li>Összesített kredit pontszám (nagy számmal kiemelve)</li>
+  <li>Megfelelőségi státusz: <span style="color:#2e7d32;font-weight:700">✓ Megfelelő</span> vagy <span style="color:#c62828;font-weight:700">✗ Nem megfelelő</span></li>
+  <li>Minden aktivitás részletesen, a megnevezésekkel és kredit értékekkel</li>
+  <li>Feltöltött fájlok letöltési linkjei</li>
+  <li>Weboldal linkek</li>
+  <li>Utolsó mentés dátuma</li>
+</ul>
+
+<h3>6.1 PDF letöltése</h3>
+<p>Az összefoglaló PDF-ben is letölthető a <strong>„📄 Aktivitásaim letöltése PDF-ben"</strong> gombbal. A gombra kattintás után megnyílik a böngésző nyomtatási dialógja.</p>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Kattints a <strong>„📄 Aktivitásaim letöltése PDF-ben"</strong> gombra.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">A megnyíló nyomtatási ablakban válaszd a <strong>„Mentés PDF-ként"</strong> (Save as PDF) lehetőséget célnyomtatóként.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-txt">Kattints a <strong>„Mentés"</strong> gombra és válaszd ki a mentési helyet.</div></div>
+</div>
+<div class="info-box">A PDF tartalmazza az összes aktivitást részletesen, a fájlok letöltési linkjeivel és a weboldal linkekkel együtt.</div>
+
+<!-- 7. TAGI AKTIVITÁSOK -->
+<h2 id="tagi-aktivitasok">7. Tagi aktivitások és publikációk</h2>
+
+<p>Ez az oldal <strong>csak olvasható</strong> nézetet biztosít az összes regisztrált tag aktivitásairól. Lehetőség van egyedi tag szerint szűrni.</p>
+
+<h3>Szűrés tag szerint</h3>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Az oldal tetején lévő legördülő menüből válaszd ki a kívánt tagot.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">Alapértelmezetten <strong>„Összes tag"</strong> van kiválasztva.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-txt">A szűrő azonnal érvényesül, újratöltés nélkül.</div></div>
+</div>
+
+<p>Minden tag kártyáján megjelenik:</p>
+<ul>
+  <li>A tag neve és összesített kredit pontszáma</li>
+  <li>Minden rögzített aktivitás részletesen (megnevezésekkel)</li>
+  <li>Feltöltött fájlok letöltési gombjai</li>
+  <li>Weboldal linkek</li>
+</ul>
+
+<!-- 8. ADMIN -->
+<h2 id="admin">8. Adminisztrátori funkciók</h2>
+
+<p>Az adminisztrátor a felhasználói felülettől elkülönített adminisztrációs panelen dolgozik, amely az alábbi menüpontokat tartalmazza:</p>
+
+<table>
+  <tr><th>Menüpont</th><th>Funkció</th></tr>
+  <tr><td>📊 Áttekintés</td><td>Összesített statisztikák: jóváhagyott tagok száma, megfelelők/nem megfelelők aránya, kredit eloszlás diagramja.</td></tr>
+  <tr><td>⏳ Jóváhagyás</td><td>Függőben lévő regisztrációs kérelmek kezelése (jóváhagyás / elutasítás). Az email értesítő automatikusan elküldésre kerül.</td></tr>
+  <tr><td>👥 Tagok</td><td>Regisztrált tagok listája szűréssel és tagok törlésének lehetősége.</td></tr>
+  <tr><td>📋 Összes aktivitás</td><td>Minden tag aktivitásának táblázatos áttekintése.</td></tr>
+  <tr><td>🏆 Eredmények</td><td>A 2026-os év végeredménye: ki teljesítette a minimum követelményt.</td></tr>
+  <tr><td>⚙️ Beállítások</td><td>EmailJS értesítési beállítások kezelése.</td></tr>
+</table>
+
+<h3>8.1 Regisztráció jóváhagyása / elutasítása</h3>
+<div class="no-break">
+<div class="step"><div class="step-num">1</div><div class="step-txt">Kattints a <strong>„⏳ Jóváhagyás"</strong> menüpontra. A badge jelzi a függőben lévő kérelmek számát.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-txt">Minden kérelemnél látható a regisztráló neve, email címe és szervezete.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-txt">Kattints a <strong>„✓ Jóváhagyás"</strong> vagy <strong>„✗ Elutasítás"</strong> gombra.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-txt">A rendszer automatikusan email értesítőt küld a tagnak (ha az EmailJS be van állítva).</div></div>
+</div>
+
+<h3>8.2 EmailJS beállítása</h3>
+<p>Az email értesítők küldéséhez <strong>EmailJS</strong> fiók szükséges (ingyenes, 200 email/hó). A beállítások a <strong>„⚙️ Beállítások"</strong> menüpontban adhatók meg:</p>
+<ul>
+  <li><strong>EmailJS Service ID</strong> — az EmailJS fiókban létrehozott service azonosítója</li>
+  <li><strong>EmailJS Public Key</strong> — az EmailJS fiók publikus kulcsa</li>
+  <li><strong>Admin értesítő sablon ID</strong> — új regisztrációkor az adminnak küldött sablon</li>
+  <li><strong>Tag értesítő sablon ID</strong> — jóváhagyáskor/elutasításkor a tagnak küldött sablon</li>
+  <li><strong>Admin email cím</strong> — az admin értesítők célcíme</li>
+</ul>
+
+<!-- 9. GYIK -->
+<h2 id="gyik">9. Gyakori kérdések</h2>
+
+<h3>Mikor lesz a rendszerem „Megfelelő" státuszú?</h3>
+<p>A rendszer akkor mutat zöld „✓ Megfelelő" státuszt, ha egyszerre teljesül:</p>
+<ul>
+  <li>A kötelező éves adatszolgáltatás be van pipálva</li>
+  <li>A kötelező publikáció cím ki van töltve</li>
+  <li>Az összesített kredit pontszám eléri a <strong>10 kreditet</strong></li>
+</ul>
+
+<h3>Elvesznek az adatok, ha nem mentem?</h3>
+<p>Igen. Az adatok csak a <strong>„💾 Mentés"</strong> gomb megnyomása után tárolódnak. Az oldal frissítése vagy elhagyása előtt mindig ments!</p>
+
+<h3>Hogyan töltök fel fájlt?</h3>
+<p>A feltöltési területen kattints a „📎 Kattints a fájl kiválasztásához" feliratra, majd böngéssz a fájlhoz. A feltöltés automatikusan elindul. Elfogadott formátumok: PDF, Word, Excel, PowerPoint, képfájlok.</p>
+
+<h3>Törölhetem a feltöltött fájlt?</h3>
+<p>A „× Törlés" gomb megnyomásával eltávolítható a hivatkozás a rendszerből, de a fájl fizikailag megmarad a tárhelyen. A letöltési link a törlés után is működhet ideiglenesen.</p>
+
+<h3>Nem kapok email értesítőt. Mi lehet a probléma?</h3>
+<p>Az email értesítők csak akkor működnek, ha az adminisztrátor beállította az EmailJS konfigurációt. Kérdéssel fordulj az adminisztrátorhoz.</p>
+
+<h3>Elfelejtettem a jelszavamat. Mit tegyek?</h3>
+<p>A bejelentkezési oldalon kattints az „Elfelejtettem a jelszavamat" linkre, add meg a regisztrált email címedet, és kövesd az emailben kapott utasításokat.</p>
+
+<h3>Hogyan tölthetem le az aktivitásomat PDF-ben?</h3>
+<p>A „Saját összesítőm" oldalon, az aktivitások összesítése alatt kattints a „📄 Aktivitásaim letöltése PDF-ben" gombra. A megjelenő nyomtatási dialógban válaszd a „Mentés PDF-ként" opciót.</p>
+
+<div class="footer-note">
+  MBF 2026 Kredit Nyilvántartó — Felhasználói útmutató | Magyar Biztonsági Fórum Egyesület<br>
+  Technikai kérdések esetén fordulj az adminisztrátorhoz.
+</div>
+
+</div>
+</body>
+</html>
