@@ -2000,21 +2000,14 @@ function actTable(r) {
   const rows = [
     { lbl:'Kötelező adatszolgáltatás',         disp:r.e?'Teljesítve':'Nem', credits:0,              val:r.e },
     { lbl:'Kötelező publikáció', credits:0, val:r.f,
-      disp: (()=>{
-        let d = r.f ? 'Teljesítve' : 'Nem';
-        if (r.f_link) d += ` <a href="${esc(r.f_link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
-        return d;
-      })()
+      disp: r.f ? 'Teljesítve' : 'Nem'
     },
     { lbl:'További publikációk', credits:(r.g||0)*2, val:(r.g||0)>0,
       disp: (()=>{
         let d = (r.g||0) + ' db';
         if (r.g_pubs && r.g_pubs.length) {
           r.g_pubs.forEach(p => {
-            d += `<div style="font-size:.78rem;margin-top:4px;padding:3px 8px;background:#f0f4f8;border-radius:5px">`;
-            if (p.title) d += `<strong>${esc(p.title)}</strong>`;
-            if (p.link)  d += ` <a href="${esc(p.link)}" target="_blank" class="pub-link-disp">🔗 Link</a>`;
-            d += '</div>';
+            if (p.title) d += `<div style="font-size:.78rem;margin-top:4px;padding:3px 8px;background:#f0f4f8;border-radius:5px"><strong>${esc(p.title)}</strong></div>`;
           });
         }
         return d;
