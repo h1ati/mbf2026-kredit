@@ -1316,23 +1316,39 @@ const WG_CFG = {
   l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
   m: { credits: 1, label: 'Téma',        placeholder: 'Téma megnevezése' },
   q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia megnevezése' },
-  r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése' },
+  r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése', hasFile: true },
   t: { credits: 2, label: 'CSR',         placeholder: 'Tevékenység megnevezése' },
 };
 
 function addWg(type, data = {}) {
   wgCounter++;
-  const cfg = WG_CFG[type];
-  const id  = 'wg_' + type + '_' + wgCounter;
-  const n   = document.querySelectorAll('#' + type + '-wgs .pub-card').length + 1;
+  const cfg     = WG_CFG[type];
+  const id      = 'wg_' + type + '_' + wgCounter;
+  const n       = document.querySelectorAll('#' + type + '-wgs .pub-card').length + 1;
+  const fileUrl  = data.file_url  || '';
+  const fileName = data.file_name || '';
+  const fileBlock = cfg.hasFile ? `
+      <div class="fg" style="margin-top:8px">
+        <label style="font-size:.8rem;font-weight:600">Fájl feltöltése (opcionális)</label>
+        <input type="file" id="${id}-finput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg" onchange="uploadPubCardFile(this,'${id}')">
+        <div id="${id}-farea" class="${fileUrl ? 'dn' : ''}">
+          <div class="file-upload-box" onclick="document.getElementById('${id}-finput').click()">
+            <span style="font-size:.85rem;color:var(--muted)">📎 Kattints a fájl kiválasztásához</span>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:4px">PDF, Word, Excel, PowerPoint, kép</div>
+          </div>
+        </div>
+        <div id="${id}-finfo" class="${fileUrl ? '' : 'dn'}">${fileUrl ? `<div class="file-info"><span class="file-info-name">📄 ${esc(fileName||'Feltöltött fájl')}</span><a href="${esc(fileUrl)}" target="_blank" rel="noopener">Megnyitás</a><button class="btn btn-err btn-sm" onclick="deletePubCardFile('${id}')" style="padding:4px 10px">× Törlés</button></div>` : ''}</div>
+        <div id="${id}-falert" style="margin-top:6px"></div>
+      </div>` : '';
   document.getElementById(type + '-wgs').insertAdjacentHTML('beforeend', `
-    <div class="pub-card" id="${id}">
+    <div class="pub-card" id="${id}" data-file-url="${esc(fileUrl)}" data-file-name="${esc(fileName)}">
       <div class="pub-card-head">
         <span class="pub-card-title">${cfg.label} #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removeWg('${id}','${type}')">× Törlés</button>
       </div>
       <input type="text" class="wg-name" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.9em"
              placeholder="${cfg.placeholder}" value="${esc(data.name||'')}">
+      ${fileBlock}
     </div>
   `);
   updateWgCount(type);
@@ -1366,7 +1382,12 @@ function updateWgCount(type) {
 function getWgs(type) {
   const result = [];
   document.querySelectorAll('#' + type + '-wgs .pub-card').forEach(card => {
-    result.push({ name: card.querySelector('.wg-name')?.value.trim() || '' });
+    const entry = { name: card.querySelector('.wg-name')?.value.trim() || '' };
+    if (WG_CFG[type]?.hasFile) {
+      entry.file_url  = card.dataset.fileUrl  || '';
+      entry.file_name = card.dataset.fileName || '';
+    }
+    result.push(entry);
   });
   return result;
 }
@@ -1580,7 +1601,8 @@ async function renderUserPubs() {
   el.innerHTML = '<div class="loading-row">Betöltés...</div>';
   try {
     const actsSnap = await db.collection('activities').where('year','==',2026).get();
-    const acts = actsSnap.docs.map(d => d.data()).filter(a => a.f_title || (a.g_pubs && a.g_pubs.length));
+    const hasRFile = a => a.r_wgs && a.r_wgs.some(w => w.name || w.file_url);
+    const acts = actsSnap.docs.map(d => d.data()).filter(a => a.f_title || (a.g_pubs && a.g_pubs.length) || hasRFile(a));
 
     // fetch user docs by uid individually (avoids compound query + index requirement)
     const uids = [...new Set(acts.map(a => a.uid).filter(Boolean))];
@@ -1591,7 +1613,7 @@ async function renderUserPubs() {
     const rows = acts
       .filter(a => {
         const u = users[a.uid];
-        return u && (a.f_title || (a.g_pubs && a.g_pubs.length));
+        return u && (a.f_title || (a.g_pubs && a.g_pubs.length) || hasRFile(a));
       })
       .sort((a,b) => {
         const na = (users[a.uid]?.last||'') + (users[a.uid]?.first||'');
@@ -1627,10 +1649,20 @@ async function renderUserPubs() {
             </div>`).join('')}
         </div>` : '';
 
+      const konferencia = hasRFile(a) ? `
+        <div style="margin-top:${(kotelező||tovabbi)?'10px':'0'}">
+          <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Más konferencián részvétel</div>
+          ${a.r_wgs.filter(w => w.name || w.file_url).map((w,i,arr) => `
+            <div style="padding:6px 0;${i>0?'border-top:1px solid #f0f0f0':''}">
+              ${w.name ? `<div style="font-weight:600">${esc(w.name)}</div>` : ''}
+              ${w.file_url ? `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><a href="${esc(w.file_url)}" target="_blank" rel="noopener" style="font-size:.8rem;background:var(--primary);color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">📄 Megnyitás</a><a href="${esc(w.file_url)}" download="${esc(w.file_name||'jelentes')}" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none">⬇ Letöltés</a></div>` : ''}
+            </div>`).join('')}
+        </div>` : '';
+
       return `
         <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
           <div style="font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">${esc(name)}</div>
-          ${kotelező}${tovabbi}
+          ${kotelező}${tovabbi}${konferencia}
         </div>`;
     }).join('');
   } catch(e) {
