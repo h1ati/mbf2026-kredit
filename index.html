@@ -972,6 +972,11 @@ service cloud.firestore {
         <div class="card-title" style="margin-top:0">Firebase konfiguráció visszaállítása</div>
         <p style="font-size:.875rem;color:var(--muted);margin-bottom:14px">Ha más Firebase projektre szeretnél átváltani, töröld a jelenlegi konfigurációt.</p>
         <button class="btn btn-err btn-sm" onclick="resetConfig()">Konfiguráció törlése és újrabeállítás</button>
+        <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-top:0;color:var(--err)">Összes aktivitásadat törlése</div>
+        <p style="font-size:.875rem;color:var(--muted);margin-bottom:14px">Törli az összes tag rögzített aktivitásadatát. A felhasználói fiókok megmaradnak. Ez a művelet nem visszavonható.</p>
+        <button class="btn btn-err btn-sm" id="del-all-acts-btn" onclick="deleteAllActivities()">🗑️ Összes aktivitásadat törlése</button>
+        <div id="del-all-acts-alert" style="margin-top:10px"></div>
       </div>
     </div>
   </div>
@@ -1218,6 +1223,31 @@ function resetConfig() {
   LS.remove('mbf26_fbcfg');
   LS.remove('mbf26_admin_email');
   location.reload();
+}
+
+async function deleteAllActivities() {
+  const alertEl = document.getElementById('del-all-acts-alert');
+  const btn = document.getElementById('del-all-acts-btn');
+  if (!confirm('FIGYELEM: Ez törli az összes tag összes aktivitásadatát!\nA felhasználói fiókok megmaradnak.\nEz a művelet NEM visszavonható!\n\nBiztosan folytatod?')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Törlés folyamatban...';
+  alertEl.innerHTML = '';
+  try {
+    const snap = await db.collection('activities').get();
+    if (snap.empty) {
+      alertEl.innerHTML = '<div class="alert alert-info">Nincs törlendő aktivitásadat.</div>';
+      return;
+    }
+    const batch = db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    alertEl.innerHTML = `<div class="alert alert-ok">✓ ${snap.size} aktivitás-dokumentum sikeresen törölve.</div>`;
+  } catch(e) {
+    alertEl.innerHTML = errHtml('Törlési hiba: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🗑️ Összes aktivitásadat törlése';
+  }
 }
 
 // ═══════════════════════════════════════════════════════
