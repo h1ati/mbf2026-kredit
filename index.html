@@ -559,16 +559,16 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">SECUSzerda</div>
-          <div class="act-lbl" style="margin-bottom:6px">SECUSzerda téma vezető <span class="act-pts">2 kredit / téma</span></div>
-          <div id="m-wgs"></div>
-          <button class="btn btn-ghost btn-sm" onclick="addWg('m')" style="margin-top:6px">+ Téma hozzáadása <span style="color:var(--muted);font-size:.8rem">(2 kredit)</span></button>
-          <div class="g-counter">
-            <span style="color:var(--muted)">Témák száma → kredit:</span>
-            <span><span id="m-count">0</span> db × 2 = <strong id="m-cred" style="color:var(--primary)">0</strong> kredit</span>
-          </div>
           <div class="act-row">
             <div><div class="act-lbl">SECUSzerda rendezvényen részvétel</div><div class="act-pts">1 kredit / alkalom (max. 2 kredit / év)</div></div>
             <input type="number" class="num-in" id="an" min="0" max="2" value="0" onchange="liveCalc()">
+          </div>
+          <div class="act-lbl" style="margin-bottom:6px;margin-top:12px">SECUSzerda téma vezető <span class="act-pts">1 kredit / téma</span></div>
+          <div id="m-wgs"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addWg('m')" style="margin-top:6px">+ Téma hozzáadása <span style="color:var(--muted);font-size:.8rem">(1 kredit)</span></button>
+          <div class="g-counter">
+            <span style="color:var(--muted)">Témák száma → kredit:</span>
+            <span><span id="m-count">0</span> db × 1 = <strong id="m-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
         </div>
 
@@ -1147,7 +1147,7 @@ let wgCounter = 0;
 const WG_CFG = {
   k: { credits: 2, label: 'Részvétel',   placeholder: 'Munkacsoport megnevezése' },
   l: { credits: 3, label: 'Koordinálás', placeholder: 'Munkacsoport megnevezése' },
-  m: { credits: 2, label: 'Téma',        placeholder: 'Téma megnevezése' },
+  m: { credits: 1, label: 'Téma',        placeholder: 'Téma megnevezése' },
   q: { credits: 3, label: 'Előadás',     placeholder: 'Konferencia megnevezése' },
   r: { credits: 2, label: 'Részvétel',   placeholder: 'Konferencia megnevezése' },
   t: { credits: 2, label: 'CSR',         placeholder: 'Tevékenység megnevezése' },
@@ -1714,8 +1714,8 @@ function actTable(r) {
     { lbl:'Bizottsági tagság',                 disp:r.j+' db',             credits:r.j*3,           val:r.j>0 },
     { lbl:'Munkacsoport részvétel',            disp:r.k+' db',             credits:r.k*2,           val:r.k>0 },
     { lbl:'Munkacsoport koordinálás',          disp:r.l+' téma',           credits:r.l*3,           val:r.l>0 },
-    { lbl:'SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*2,           val:r.m>0 },
     { lbl:'SECUSzerda részvétel',              disp:r.n+' alkalom',        credits:Math.min(r.n,2), val:r.n>0 },
+    { lbl:'SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*1,           val:r.m>0 },
     { lbl:'MBF Konferencia részvétel',         disp:r.o?'Igen':'Nem',      credits:r.o?2:0,         val:r.o },
     { lbl:'MBF Konferencián előadás',          disp:r.p?'Igen':'Nem',      credits:r.p?4:0,         val:r.p },
     { lbl:'Más szakmai konf. előadás',         disp:r.q+' alkalom',        credits:r.q*3,           val:r.q>0 },
