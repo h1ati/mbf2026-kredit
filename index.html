@@ -1230,7 +1230,7 @@ function addPub(data = {}) {
   document.getElementById('g-pubs').insertAdjacentHTML('beforeend', `
     <div class="pub-card" id="${id}" data-file-url="${esc(fileUrl)}" data-file-name="${esc(fileName)}">
       <div class="pub-card-head">
-        <span class="pub-card-title">Publikáció #${n}</span>
+        <span class="pub-card-title">További publikáció #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removePub('${id}')">× Törlés</button>
       </div>
       <div class="fg" style="margin-bottom:8px">
@@ -1597,7 +1597,7 @@ function pruneEmpty() {
     if (!title && !link) card.remove();
   });
   document.querySelectorAll('#g-pubs .pub-card .pub-card-title').forEach((el,i) => {
-    el.textContent = 'Publikáció #' + (i + 1);
+    el.textContent = 'További publikáció #' + (i + 1);
   });
   updateGCount();
   liveCalc();
