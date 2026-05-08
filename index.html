@@ -1721,33 +1721,17 @@ function renderPubsRows(rows) {
     el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>Nincs rögzített aktivitás.</p></div>';
     return;
   }
-  const fileBtn = (url, name) =>
-    `<button onclick="downloadFile('${esc(url)}','${esc(name)}')" style="font-size:.8rem;background:#6c757d;color:#fff;padding:4px 10px;border-radius:6px;border:none;cursor:pointer">⬇ Letöltés</button>`;
-  const secTitle = t => `<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${t}</div>`;
-
   el.innerHTML = rows.map(a => {
     const u     = _pubsUsers[a.uid];
     const name  = u ? `${u.last} ${u.first}` : '—';
     const total = a.total || 0;
     const pass  = total >= 10 && a.e && a.f;
-    let body = actTable(a);
-    const files = [];
-    if (a.f_file_url) files.push(`${secTitle('Kötelező publikáció – fájl')}<div style="font-weight:600;margin-bottom:4px">${esc(a.f_title||'')}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(a.f_file_url, a.f_file_name||'publikacio')}</div>`);
-    if (a.g_pubs && a.g_pubs.some(p => p.file_url)) {
-      const pf = a.g_pubs.filter(p=>p.file_url).map(p=>`<div style="margin-bottom:6px">${p.title?`<div style="font-weight:600;margin-bottom:4px">${esc(p.title)}</div>`:''}<div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(p.file_url,p.file_name||p.title||'publikacio')}</div></div>`).join('');
-      files.push(secTitle('További publikációk – fájlok') + pf);
-    }
-    if (a.r_wgs && a.r_wgs.some(w=>w.file_url)) {
-      const rf = a.r_wgs.filter(w=>w.file_url).map(w=>`<div style="margin-bottom:6px">${w.name?`<div style="font-weight:600;margin-bottom:4px">${esc(w.name)}</div>`:''}<div style="display:flex;gap:8px;flex-wrap:wrap">${fileBtn(w.file_url,w.file_name||w.name||'jelentes')}</div></div>`).join('');
-      files.push(secTitle('Más konferencián részvétel – fájlok') + rf);
-    }
-    if (files.length) body += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${files.join('')}</div>`;
     const statusColor = pass ? 'var(--ok)' : total>=10 ? 'var(--warn)' : 'var(--err)';
     return `<div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent)">
         <div style="font-size:1rem;font-weight:700;color:var(--primary)">${esc(name)}</div>
         <div style="font-size:.85rem;font-weight:700;color:${statusColor}">${total} kredit</div>
-      </div>${body}</div>`;
+      </div>${actDetail(a)}</div>`;
   }).join('');
 }
 
