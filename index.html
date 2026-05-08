@@ -873,7 +873,6 @@ service cloud.firestore {
           <tr><td>📊 Áttekintés</td><td>Összesített statisztikák, kredit eloszlás.</td></tr>
           <tr><td>⏳ Jóváhagyás</td><td>Függőben lévő regisztrációk kezelése — automatikus email értesítővel.</td></tr>
           <tr><td>👥 Tagok</td><td>Regisztrált tagok listája, törlési lehetőség.</td></tr>
-          <tr><td>📋 Összes aktivitás</td><td>Minden tag aktivitásának táblázatos áttekintése.</td></tr>
           <tr><td>🏆 Eredmények</td><td>A 2026-os év végeredménye.</td></tr>
           <tr><td>⚙️ Beállítások</td><td>EmailJS értesítési beállítások.</td></tr>
         </table>
@@ -930,7 +929,6 @@ service cloud.firestore {
         <li class="nav-item"><div class="nav-lnk on" onclick="aSection('overview',this)"><span class="nav-ico">📊</span> Áttekintés</div></li>
         <li class="nav-item"><div class="nav-lnk" onclick="aSection('pend',this)"><span class="nav-ico">⏳</span> Jóváhagyás <span id="pend-cnt" class="badge b-warn" style="margin-left:4px"></span></div></li>
         <li class="nav-item"><div class="nav-lnk" onclick="aSection('members',this)"><span class="nav-ico">👥</span> Tagok</div></li>
-        <li class="nav-item"><div class="nav-lnk" onclick="aSection('alladmin',this)"><span class="nav-ico">📋</span> Összes aktivitás</div></li>
         <li class="nav-item"><div class="nav-lnk" onclick="aSection('results',this)"><span class="nav-ico">🏆</span> Eredmények</div></li>
         <li class="nav-item"><div class="nav-lnk" onclick="aSection('cfg',this)"><span class="nav-ico">⚙️</span> Beállítások</div></li>
       </ul>
@@ -947,9 +945,6 @@ service cloud.firestore {
     </div>
     <div id="as-members" class="dn">
       <div class="card"><div class="card-title">Tagok kezelése</div><div id="a-members-list"></div></div>
-    </div>
-    <div id="as-alladmin" class="dn">
-      <div class="card"><div class="card-title">Összes rögzített aktivitás (2026)</div><div id="a-all-list"></div></div>
     </div>
     <div id="as-results" class="dn">
       <div class="card"><div class="card-title">2026-os év eredményei</div><div id="a-res-list"></div></div>
@@ -1438,7 +1433,7 @@ function uSection(s, el) {
 }
 
 function aSection(s, el) {
-  ['overview','pend','members','alladmin','results','cfg'].forEach(x =>
+  ['overview','pend','members','results','cfg'].forEach(x =>
     document.getElementById('as-' + x).classList.toggle('dn', x !== s)
   );
   document.querySelectorAll('#pg-admin .nav-lnk').forEach(l => l.classList.remove('on'));
@@ -1446,7 +1441,6 @@ function aSection(s, el) {
   if (s === 'overview')  renderAOverview();
   if (s === 'pend')      renderAPend();
   if (s === 'members')   renderAMembers();
-  if (s === 'alladmin')  renderAAll();
   if (s === 'results')   renderAResults();
   if (s === 'cfg')       loadCfgForm();
 }
@@ -2143,37 +2137,6 @@ async function renderAMembers() {
     </div>`;
 }
 
-async function renderAAll() {
-  document.getElementById('a-all-list').innerHTML = `<div class="loading-row">Betöltés...</div>`;
-  const [usersSnap, actsSnap] = await Promise.all([
-    db.collection('users').where('role','==','user').get(),
-    db.collection('activities').where('year','==',2026).get()
-  ]);
-  const users = usersSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const acts  = actsSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const el = document.getElementById('a-all-list');
-  if (!acts.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>Még nincs rögzített aktivitás.</p></div>'; return;
-  }
-  const cols = ['E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T'];
-  let h = '<div class="tbl-wrap"><table><tr><th>Név</th>';
-  cols.forEach(c => h += `<th>${c}</th>`);
-  h += '<th>Kredit</th><th>Mentve</th></tr>';
-  acts.forEach(a => {
-    const u = users.find(x=>x.id===a.uid);
-    const b = x => x ? '✓' : '—';
-    h += `<tr>
-      <td><strong>${u ? esc(u.last)+' '+esc(u.first) : '—'}</strong></td>
-      <td>${b(a.e)}</td><td>${b(a.f)}</td>
-      <td>${a.g||0}</td><td>${a.h||0}</td><td>${b(a.i)}</td><td>${a.j||0}</td>
-      <td>${a.k||0}</td><td>${a.l||0}</td><td>${a.m||0}</td><td>${a.n||0}</td>
-      <td>${b(a.o)}</td><td>${b(a.p)}</td>
-      <td>${a.q||0}</td><td>${a.r||0}</td><td>${a.s||0}</td><td>${a.t||0}</td>
-      <td><strong>${a.total}</strong></td>
-      <td style="white-space:nowrap">${fmtDate(a.updated)}</td></tr>`;
-  });
-  el.innerHTML = h + '</table></div>';
-}
 
 async function renderAResults() {
   document.getElementById('a-res-list').innerHTML = `<div class="loading-row">Betöltés...</div>`;
