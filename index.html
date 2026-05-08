@@ -518,6 +518,10 @@ service cloud.firestore {
               </div>
               <div style="font-size:.8rem;font-weight:600;padding:4px 0 8px">Publikáció részletei</div>
               <div class="fg">
+                <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
+                <input type="url" id="af-link" placeholder="https://...">
+              </div>
+              <div class="fg">
                 <label style="font-size:.8rem;font-weight:600">Fájl feltöltése (opcionális)</label>
                 <input type="file" id="af-file-input" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg" onchange="uploadPubFile(this)">
                 <div id="af-file-area">
@@ -528,10 +532,6 @@ service cloud.firestore {
                 </div>
                 <div id="af-file-info" class="dn"></div>
                 <div id="af-file-alert" style="margin-top:6px"></div>
-              </div>
-              <div class="fg">
-                <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
-                <input type="url" id="af-link" placeholder="https://...">
               </div>
             </div>
           </div>
@@ -1220,6 +1220,10 @@ function addPub(data = {}) {
       </div>
       <div style="font-size:.8rem;font-weight:600;padding:4px 0 8px">Publikáció részletei</div>
       <div class="fg">
+        <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
+        <input type="url" class="pub-link" placeholder="https://..." value="${esc(data.link||'')}">
+      </div>
+      <div class="fg">
         <label style="font-size:.8rem;font-weight:600">Fájl feltöltése (opcionális)</label>
         <input type="file" id="${id}-finput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg" onchange="uploadPubCardFile(this,'${id}')">
         <div id="${id}-farea" class="${fileUrl ? 'dn' : ''}">
@@ -1230,10 +1234,6 @@ function addPub(data = {}) {
         </div>
         <div id="${id}-finfo" class="${fileUrl ? '' : 'dn'}">${fileHtml}</div>
         <div id="${id}-falert" style="margin-top:6px"></div>
-      </div>
-      <div class="fg">
-        <label style="font-size:.8rem;font-weight:600">Weboldal link (opcionális)</label>
-        <input type="url" class="pub-link" placeholder="https://..." value="${esc(data.link||'')}">
       </div>
     </div>`);
   updateGCount();
