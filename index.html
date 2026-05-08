@@ -210,10 +210,13 @@ small{font-size:.8rem;color:var(--muted)}
 .info-icon:hover .info-tip{display:block}
 @media print{
   body>*:not(#pdf-print-overlay){display:none!important}
-  #pdf-print-overlay{display:block!important}
+  #pdf-print-overlay{display:block!important;position:static!important;overflow:visible!important}
+  .pdf-modal-bar{display:none!important}
   @page{margin:15mm}
 }
-#pdf-print-overlay{display:none}
+#pdf-print-overlay{display:none;position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto}
+#pdf-print-overlay.show{display:block}
+.pdf-modal-bar{position:sticky;top:0;background:#1a3a5c;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;z-index:1}
 </style>
 </head>
 <body>
@@ -2089,7 +2092,7 @@ async function downloadSummaryPdf(btn) {
       overlay.id = 'pdf-print-overlay';
       document.body.appendChild(overlay);
     }
-    overlay.innerHTML = `
+    const content = `
       <div style="font-family:Arial,sans-serif;font-size:12px;color:#222;max-width:750px;margin:0 auto;padding:20px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px">
           <div>
@@ -2108,25 +2111,33 @@ async function downloadSummaryPdf(btn) {
         </div>
         <div style="margin-top:16px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999">Generálva: ${new Date().toLocaleString('hu-HU')}</div>
       </div>`;
-    alertEl.innerHTML = '';
-    const alertBox = document.createElement('div');
-    alertBox.className = 'alert alert-ok';
-    alertBox.style.cssText = 'display:flex;align-items:center;gap:10px';
-    const msg = document.createElement('span');
-    msg.textContent = 'Aktivitások betöltve — kattints a nyomtatáshoz:';
-    const printBtn = document.createElement('button');
-    printBtn.className = 'btn btn-p btn-sm';
-    printBtn.textContent = '🖨️ Nyomtatás / PDF mentés';
-    printBtn.addEventListener('click', function() {
-      window.addEventListener('afterprint', () => {
-        overlay.innerHTML = '';
-        alertEl.innerHTML = '';
-      }, { once: true });
+
+    const closeOverlay = () => { overlay.classList.remove('show'); overlay.innerHTML = ''; };
+
+    const bar = document.createElement('div');
+    bar.className = 'pdf-modal-bar';
+    bar.innerHTML = '<span style="flex:1;font-weight:700;font-size:.95rem">Aktivitásaim előnézete</span>';
+
+    const doPrintBtn = document.createElement('button');
+    doPrintBtn.className = 'btn btn-ok btn-sm';
+    doPrintBtn.textContent = '🖨️ Nyomtatás / PDF mentés';
+    doPrintBtn.addEventListener('click', () => {
+      window.addEventListener('afterprint', closeOverlay, { once: true });
       window.print();
     });
-    alertBox.appendChild(msg);
-    alertBox.appendChild(printBtn);
-    alertEl.appendChild(alertBox);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-ghost btn-sm';
+    closeBtn.style.cssText = 'border-color:rgba(255,255,255,.4);color:#fff';
+    closeBtn.textContent = '✕ Bezárás';
+    closeBtn.addEventListener('click', closeOverlay);
+
+    bar.appendChild(doPrintBtn);
+    bar.appendChild(closeBtn);
+
+    overlay.innerHTML = content;
+    overlay.prepend(bar);
+    overlay.classList.add('show');
   } catch(e) {
     alertEl.innerHTML = errHtml('PDF hiba: ' + e.message);
   } finally {
