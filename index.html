@@ -493,6 +493,10 @@ service cloud.firestore {
       <div class="card">
         <div class="card-title">Aktivitások összesítése</div>
         <div id="u-summ"><div class="loading-row">Betöltés...</div></div>
+        <div style="margin-top:14px">
+          <button class="btn btn-ghost" onclick="sendSummaryEmail(this)" style="font-size:.875rem">📧 Aktivitásaim elküldése a saját email címemre</button>
+          <div id="summary-email-alert" style="margin-top:8px"></div>
+        </div>
       </div>
     </div>
 
@@ -749,6 +753,7 @@ service cloud.firestore {
           <div class="fg"><label>Admin értesítő sablon ID <span style="font-weight:400;color:var(--muted)">(új regisztráció → adminnak)</span></label><input type="text" id="cfg-ejs-template" placeholder="template_xxxxxxx"></div>
           <div class="fg"><label>Tag értesítő sablon ID <span style="font-weight:400;color:var(--muted)">(jóváhagyás/elutasítás → tagnak)</span></label><input type="text" id="cfg-ejs-user-template" placeholder="template_xxxxxxx"></div>
         </div>
+        <div class="fg"><label>Aktivitás összefoglaló sablon ID <span style="font-weight:400;color:var(--muted)">(tag saját aktivitásait küldi el magának)</span></label><input type="text" id="cfg-ejs-summary-template" placeholder="template_xxxxxxx"><p style="font-size:.78rem;color:var(--muted);margin-top:4px">A sablonban használható változók: <code>{{to_email}}</code>, <code>{{nev}}</code>, <code>{{osszes_kredit}}</code>, <code>{{statusz}}</code>, <code>{{aktivitasok}}</code>, <code>{{fajlok}}</code>, <code>{{datum}}</code></p></div>
         <div class="fg"><label>Admin értesítő email cím</label><input type="email" id="cfg-ejs-to" placeholder="admin@email.hu"></div>
         <button class="btn btn-p" onclick="saveCfg()">Mentés</button>
         <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
@@ -1975,6 +1980,71 @@ async function rejectUser(uid) {
   refreshAdmin();
 }
 
+async function sendSummaryEmail(btn) {
+  const alertEl = document.getElementById('summary-email-alert');
+  const ejs = LS.get('mbf26_ejs');
+  if (!ejs || !ejs.service || !ejs.summaryTemplate) {
+    alertEl.innerHTML = errHtml('Az összefoglaló sablon ID nincs beállítva. Kérj segítséget az adminisztrátortól.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '⏳ Küldés...';
+  alertEl.innerHTML = '';
+  try {
+    const rec = await getUserActivity(currentUser.id);
+    if (!rec) throw new Error('Nincs rögzített aktivitás.');
+    const name  = `${currentUser.last || ''} ${currentUser.first || ''}`.trim();
+    const total = rec.total || 0;
+    const pass  = isPass(rec);
+
+    // Aktivitások szöveg
+    const rows = [
+      ['Kötelező adatszolgáltatás', rec.e ? 'Teljesítve' : 'Nem', ''],
+      ['Kötelező publikáció', rec.f ? (rec.f_title || 'Teljesítve') : 'Nem', ''],
+      ['További publikációk', (rec.g||0) + ' db', (rec.g||0)*2 + ' kredit'],
+      ['Közgyűlésen részvétel', (rec.h||0) + ' alkalom', (rec.h||0) + ' kredit'],
+      ['Tisztségviselői pozíció', rec.i_text || (rec.i ? 'Igen' : 'Nem'), rec.i ? '4 kredit' : ''],
+      ['Bizottsági tagság', (rec.j||0) + ' db', (rec.j||0)*3 + ' kredit'],
+      ['Munkacsoport részvétel', (rec.k||0) + ' db', (rec.k||0)*2 + ' kredit'],
+      ['Munkacsoport koordinálás', (rec.l||0) + ' db', (rec.l||0)*3 + ' kredit'],
+      ['SECUSzerda részvétel', (rec.n||0) + ' alkalom', Math.min(rec.n||0,2) + ' kredit'],
+      ['SECUSzerda téma vezető', (rec.m||0) + ' téma', (rec.m||0) + ' kredit'],
+      ['MBF Konferencia részvétel', rec.o ? 'Igen' : 'Nem', rec.o ? '2 kredit' : ''],
+      ['MBF Konf. előadás / közreműk.', rec.p ? (rec.p_text || 'Igen') : 'Nem', rec.p ? '2 kredit' : ''],
+      ['Más szakmai konf. előadás', (rec.q||0) + ' alkalom', (rec.q||0)*3 + ' kredit'],
+      ['Más konf. részvétel (jel.)', (rec.r||0) + ' alkalom', (rec.r||0)*2 + ' kredit'],
+      ['Egyéni vállalások', (rec.s||0) + ' kredit', (rec.s||0) + ' kredit'],
+      ['CSR tevékenység', (rec.t||0) + ' esemény', (rec.t||0)*2 + ' kredit'],
+    ].filter(r => r[1] !== 'Nem' && r[1] !== '0 db' && r[1] !== '0 alkalom' && r[1] !== '0 téma' && r[1] !== '0 esemény' && r[1] !== '0 kredit');
+
+    const aktivitasok = rows.map(r => `${r[0]}: ${r[1]}${r[2] ? ' ('+r[2]+')' : ''}`).join('\n');
+
+    // Feltöltött fájlok
+    const fajlok_lines = [];
+    if (rec.f_file_url) fajlok_lines.push(`Kötelező publikáció (${rec.f_title||''}): ${rec.f_file_url}`);
+    (rec.g_pubs||[]).filter(p=>p.file_url).forEach(p => fajlok_lines.push(`További publikáció (${p.title||''}): ${p.file_url}`));
+    (rec.r_wgs||[]).filter(w=>w.file_url).forEach(w => fajlok_lines.push(`Konferencia részvétel (${w.name||''}): ${w.file_url}`));
+    const fajlok = fajlok_lines.length ? fajlok_lines.join('\n') : 'Nincs feltöltött fájl.';
+
+    await emailjs.send(ejs.service, ejs.summaryTemplate, {
+      to_email:       currentUser.email,
+      nev:            name,
+      osszes_kredit:  total,
+      statusz:        pass ? 'Megfelelő ✓' : `Nem megfelelő ✗ (${total}/10 kredit)`,
+      aktivitasok:    aktivitasok,
+      fajlok:         fajlok,
+      datum:          new Date().toLocaleString('hu-HU'),
+    });
+    alertEl.innerHTML = '<div class="alert alert-ok">✓ Az összefoglaló elküldve: ' + esc(currentUser.email) + '</div>';
+    setTimeout(() => { alertEl.innerHTML = ''; }, 5000);
+  } catch(e) {
+    alertEl.innerHTML = errHtml('Küldési hiba: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📧 Aktivitásaim elküldése a saját email címemre';
+  }
+}
+
 async function sendStatusNotification(user, status) {
   const ejs = LS.get('mbf26_ejs');
   if (!ejs || !ejs.service || !ejs.userTemplate) return;
@@ -2072,21 +2142,23 @@ function closeFileModal() {
 // ═══════════════════════════════════════════════════════
 function loadCfgForm() {
   const ejs = LS.get('mbf26_ejs') || {};
-  document.getElementById('cfg-ejs-service').value       = ejs.service       || '';
-  document.getElementById('cfg-ejs-template').value      = ejs.template      || '';
-  document.getElementById('cfg-ejs-user-template').value = ejs.userTemplate  || '';
-  document.getElementById('cfg-ejs-pubkey').value        = ejs.pubkey        || '';
-  document.getElementById('cfg-ejs-to').value            = ejs.to            || '';
+  document.getElementById('cfg-ejs-service').value           = ejs.service         || '';
+  document.getElementById('cfg-ejs-template').value          = ejs.template         || '';
+  document.getElementById('cfg-ejs-user-template').value     = ejs.userTemplate     || '';
+  document.getElementById('cfg-ejs-summary-template').value  = ejs.summaryTemplate  || '';
+  document.getElementById('cfg-ejs-pubkey').value            = ejs.pubkey           || '';
+  document.getElementById('cfg-ejs-to').value                = ejs.to               || '';
 }
 
 function saveCfg() {
-  const service      = document.getElementById('cfg-ejs-service').value.trim();
-  const template     = document.getElementById('cfg-ejs-template').value.trim();
-  const userTemplate = document.getElementById('cfg-ejs-user-template').value.trim();
-  const pubkey       = document.getElementById('cfg-ejs-pubkey').value.trim();
-  const to           = document.getElementById('cfg-ejs-to').value.trim();
+  const service         = document.getElementById('cfg-ejs-service').value.trim();
+  const template        = document.getElementById('cfg-ejs-template').value.trim();
+  const userTemplate    = document.getElementById('cfg-ejs-user-template').value.trim();
+  const summaryTemplate = document.getElementById('cfg-ejs-summary-template').value.trim();
+  const pubkey          = document.getElementById('cfg-ejs-pubkey').value.trim();
+  const to              = document.getElementById('cfg-ejs-to').value.trim();
   if (service && pubkey) {
-    LS.set('mbf26_ejs', { service, template, userTemplate, pubkey, to });
+    LS.set('mbf26_ejs', { service, template, userTemplate, summaryTemplate, pubkey, to });
     emailjs.init(pubkey);
     document.getElementById('cfg-alert').innerHTML =
       '<div class="alert alert-ok">✓ EmailJS beállítások elmentve.</div>';
