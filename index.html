@@ -659,7 +659,7 @@ service cloud.firestore {
           </div>
           <div class="act-row">
             <div><div class="act-lbl">MBF Konferencián előadás vagy közreműködés a lebonyolításban<span class="info-icon">i<span class="info-tip">Előadó vagy közreműködés a konferencia lebonyolításában, pl.: műsorvezetés, pódium beszélgetés részvétel, technikai csapat tagja.</span></span></div><div class="act-pts">2 kredit (ha előadott vagy közreműködött)</div></div>
-            <input type="checkbox" class="chk" id="ap" onchange="if(this.checked)document.getElementById('ao').checked=true;document.getElementById('ap-text-row').style.display=this.checked?'block':'none';liveCalc()">
+            <input type="checkbox" class="chk" id="ap" onchange="if(this.checked){document.getElementById('ao').checked=true;}else{document.getElementById('ap-text').value='';}document.getElementById('ap-text-row').style.display=this.checked?'block':'none';liveCalc()">
           </div>
           <div id="ap-text-row" style="display:none;margin-top:6px">
             <input type="text" id="ap-text" placeholder="Közreműködés megnevezése" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.875rem" oninput="liveCalc()">
@@ -714,13 +714,6 @@ service cloud.firestore {
         <div class="df g1">
           <button class="btn btn-p" id="save-btn" onclick="saveActs()">💾 Mentés</button>
         </div>
-      </div>
-    </div>
-
-    <div id="us-hist" class="dn">
-      <div class="card">
-        <div class="card-title">Rögzített aktivitások</div>
-        <div id="u-hist"><div class="loading-row">Betöltés...</div></div>
       </div>
     </div>
 
@@ -1016,8 +1009,7 @@ service cloud.firestore {
 </div>
 </div>
 
-<!-- Firebase & EmailJS SDKs & html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Firebase & EmailJS SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1110,11 +1102,11 @@ function downloadConfigured() {
   // Grab the current HTML and replace the embedded config placeholders
   let html = document.documentElement.outerHTML;
   html = html.replace(
-    'const EMBEDDED_CONFIG = null;',
+    /const EMBEDDED_CONFIG = \{[\s\S]*?\n\};/,
     `const EMBEDDED_CONFIG = ${JSON.stringify(config, null, 2)};`
   );
   html = html.replace(
-    "const EMBEDDED_ADMIN_EMAIL = '';",
+    /const EMBEDDED_ADMIN_EMAIL = '[^']*';/,
     `const EMBEDDED_ADMIN_EMAIL = '${adminEmail}';`
   );
 
@@ -1432,13 +1424,12 @@ function showPg(p) {
 }
 
 function uSection(s, el) {
-  ['dash','act','hist','pubs','guide'].forEach(x => {
+  ['dash','act','pubs','guide'].forEach(x => {
     document.getElementById('us-' + x).classList.toggle('dn', x !== s);
     const navEl = document.getElementById('unl-' + x);
     if (navEl) navEl.classList.toggle('on', x === s);
   });
   if (s === 'act')  loadActForm();
-  if (s === 'hist') renderUserHist();
   if (s === 'dash') renderUserDash();
   if (s === 'pubs') renderUserPubs();
 }
@@ -1467,7 +1458,7 @@ function calcCredits(a) {
 }
 
 function isPass(a) {
-  return a && a.e && a.f && (a.total || calcCredits(a)) >= 10;
+  return a && a.e && a.f && calcCredits(a) >= 10;
 }
 
 // ── Publication management ────────────────────────────
@@ -1945,17 +1936,6 @@ async function renderUserDash() {
   }
 }
 
-async function renderUserHist() {
-  const rec = await getUserActivity(currentUser.id);
-  const el  = document.getElementById('u-hist');
-  if (!rec) {
-    el.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><p>Még nincs rögzített adat.</p></div>`;
-  } else {
-    el.innerHTML = actTable(rec) + saveInfo(rec) +
-      `<button class="btn btn-ghost btn-sm mt2" onclick="uSection('act',document.getElementById('unl-act'))">✏️ Szerkesztés</button>`;
-  }
-}
-
 let _pubsRows  = [];
 let _pubsUsers = {};
 
@@ -2283,7 +2263,7 @@ function actDetailPdf(r) {
   if (r.o || r.p || (r.r||0)>0 || (r.q||0)>0) {
     h += S('Konferenciák');
     if (r.o) h += row('MBF Konferencián részvétel', 'Igen', 2);
-    if (r.p) h += row('MBF Konferencián előadás / közreműk.', esc(r.p_text||'Igen'), 2);
+    if (r.p && r.p_text) h += row('MBF Konferencián előadás / közreműk.', esc(r.p_text), 2);
     if ((r.r||0)>0) h += row(`Más konf. részvétel (${r.r} alkalom)`, '', (r.r||0)*2, wgLinesFile(r.r_wgs));
     if ((r.q||0)>0) h += row(`Más szakmai konf. előadás (${r.q} alkalom)`, '', (r.q||0)*3, wgLines(r.q_wgs));
   }
@@ -2522,7 +2502,7 @@ function actTable(r) {
     { lbl:'SECUSzerda részvétel',              disp:r.n+' alkalom',        credits:Math.min(r.n,2), val:r.n>0 },
     { lbl:'SECUSzerda téma vezető',            disp:r.m+' téma',           credits:r.m*1,           val:r.m>0 },
     { lbl:'MBF Konferencia részvétel',         disp:r.o?'Igen':'Nem',      credits:r.o?2:0,         val:r.o },
-    { lbl:'MBF Konferencián előadás / közreműködés', disp:r.p?(r.p_text||'Igen'):'Nem', credits:r.p?2:0, val:r.p },
+    { lbl:'MBF Konferencián előadás / közreműködés', disp:(r.p&&r.p_text)?r.p_text:'Nem', credits:(r.p&&r.p_text)?2:0, val:!!(r.p&&r.p_text) },
     { lbl:'Más szakmai konf. előadás',         disp:r.q+' alkalom',        credits:r.q*3,           val:r.q>0 },
     { lbl:'Más konf. részvétel (jelentéssel)', disp:r.r+' alkalom',        credits:r.r*2,           val:r.r>0 },
     { lbl:'Egyéni vállalások',                 disp:r.s+' kredit',         credits:r.s,             val:r.s>0 },
@@ -2626,7 +2606,7 @@ function actDetail(r) {
   if (hasKonf) {
     h += S('Konferenciák');
     if (r.o) h += row('MBF Konferencián részvétel', 'Igen', 2);
-    if (r.p) h += row('MBF Konferencián előadás / közreműk.', esc(r.p_text||'Igen'), 2);
+    if (r.p && r.p_text) h += row('MBF Konferencián előadás / közreműk.', esc(r.p_text), 2);
     if ((r.r||0)>0) h += row(`Más konf. részvétel (${r.r} alkalom)`, '', (r.r||0)*2, wgListFile(r.r_wgs));
     if ((r.q||0)>0) h += row(`Más szakmai konf. előadás (${r.q} alkalom)`, '', (r.q||0)*3, wgList(r.q_wgs));
   }
@@ -2643,7 +2623,7 @@ function actDetail(r) {
   }
 
   // ── Összesítő ──
-  const tot = r.total || calcCredits(r);
+  const tot = calcCredits(r);
   h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:10px 12px;background:var(--bg);border-radius:8px;font-weight:700">
     <span>Összesen</span><span style="color:var(--primary);font-size:1.1rem">${tot} kredit</span>
   </div>`;
