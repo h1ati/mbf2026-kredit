@@ -1462,7 +1462,7 @@ function aSection(s, el) {
 function calcCredits(a) {
   return ((a.g||0) * 2) + (a.h||0) + (a.i ? 4 : 0) + ((a.j||0) * 3) +
          ((a.k||0) * 2) + ((a.l||0) * 3) + ((a.m||0) * 1) + Math.min(a.n||0, 2) +
-         (a.p ? 2 : (a.o ? 2 : 0)) + ((a.q||0) * 3) + ((a.r||0) * 2) +
+         (a.o ? 2 : 0) + (a.p && a.p_text ? 2 : 0) + ((a.q||0) * 3) + ((a.r||0) * 2) +
          (a.s||0) + ((a.t||0) * 2);
 }
 
