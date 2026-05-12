@@ -683,12 +683,12 @@ service cloud.firestore {
 
         <div class="act-section">
           <div class="act-sec-title">Egyéb aktivitások</div>
-          <div class="act-lbl" style="margin-bottom:6px">Egyéni vállalások <span class="act-pts">1–2 kredit / vállalás</span></div>
+          <div class="act-lbl" style="margin-bottom:6px">Egyéni vállalások <span class="act-pts">2 kredit / vállalás</span></div>
           <div id="s-wgs"></div>
           <button class="btn btn-ghost btn-sm" onclick="addSWg()" style="margin-top:6px">+ Egyéni vállalás hozzáadása</button>
           <div class="g-counter">
             <span style="color:var(--muted)">Egyéni vállalások → kredit:</span>
-            <span><span id="s-count">0</span> db = <strong id="s-cred" style="color:var(--primary)">0</strong> kredit</span>
+            <span><span id="s-count">0</span> db × 2 = <strong id="s-cred" style="color:var(--primary)">0</strong> kredit</span>
           </div>
           <div class="act-lbl" style="margin-top:16px;margin-bottom:6px">CSR tevékenység MBF nevében <span class="act-pts">2 kredit / esemény</span></div>
           <div id="t-wgs"></div>
@@ -824,7 +824,7 @@ service cloud.firestore {
         <h4>Más szakmai konferencián előadás</h4><p>Értéke: <strong>3 kredit / előadás</strong>.</p>
 
         <h3>4.7 Egyéb aktivitások</h3>
-        <h4>Egyéni vállalások</h4><p>Add meg a vállalás megnevezését és kredit értékét (1 vagy 2 kredit / vállalás).</p>
+        <h4>Egyéni vállalások</h4><p>Add meg a vállalás megnevezését. Értéke: <strong>2 kredit / vállalás</strong>.</p>
         <h4>CSR tevékenység MBF nevében</h4><p>Értéke: <strong>2 kredit / esemény</strong>.</p>
 
         <h3>4.8 Fájlok feltöltése</h3>
@@ -848,7 +848,7 @@ service cloud.firestore {
           <tr><td>MBF Konf. előadás / közreműk.</td><td class="cr">2 kredit</td><td>Tartalmazza a részvételt is</td></tr>
           <tr><td>Más konf. részvétel (jel.)</td><td class="cr">2 kredit / alkalom</td><td>Jelentés feltöltése szükséges</td></tr>
           <tr><td>Más szakmai konf. előadás</td><td class="cr">3 kredit / előadás</td><td></td></tr>
-          <tr><td>Egyéni vállalás</td><td class="cr">1–2 kredit / db</td><td>Maximum 2 kredit / vállalás</td></tr>
+          <tr><td>Egyéni vállalás</td><td class="cr">2 kredit / db</td><td></td></tr>
           <tr><td>CSR tevékenység MBF nevében</td><td class="cr">2 kredit / esemény</td><td></td></tr>
         </table>
 
@@ -1634,13 +1634,7 @@ function addSWg(data = {}) {
         <span class="pub-card-title">Egyéni vállalás #${n}</span>
         <button class="btn btn-err btn-sm" onclick="removeSWg('${id}')">× Törlés</button>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
-        <input type="text" class="wg-name" style="flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:.9em" placeholder="Vállalás megnevezése" value="${esc(data.name||'')}">
-        <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
-          <label style="font-size:.85rem;color:var(--muted)">Kredit:</label>
-          <input type="number" class="s-credits num-in" min="1" max="2" value="${data.credits||1}" style="width:62px" onchange="updateSCount()">
-        </div>
-      </div>
+      <input type="text" class="wg-name" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:.9em;margin-top:4px" placeholder="Vállalás megnevezése" value="${esc(data.name||'')}">
     </div>
   `);
   updateSCount();
@@ -1655,11 +1649,9 @@ function removeSWg(id) {
 }
 
 function updateSCount() {
-  const cards = document.querySelectorAll('#s-wgs .pub-card');
-  let total = 0;
-  cards.forEach(card => { total += parseInt(card.querySelector('.s-credits')?.value || 0); });
-  document.getElementById('s-count').textContent = cards.length;
-  document.getElementById('s-cred').textContent  = total;
+  const n = document.querySelectorAll('#s-wgs .pub-card').length;
+  document.getElementById('s-count').textContent = n;
+  document.getElementById('s-cred').textContent  = n * 2;
   liveCalc();
 }
 
@@ -1668,7 +1660,7 @@ function getSWgs() {
   document.querySelectorAll('#s-wgs .pub-card').forEach(card => {
     result.push({
       name:    card.querySelector('.wg-name')?.value.trim() || '',
-      credits: parseInt(card.querySelector('.s-credits')?.value || 1)
+      credits: 2
     });
   });
   return result;
